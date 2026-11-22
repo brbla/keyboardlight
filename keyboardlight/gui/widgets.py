@@ -26,3 +26,25 @@ def nav_only(combo: QComboBox) -> QComboBox:
     combo.view().installEventFilter(f)
     combo._nav_filter = f            # keep a reference
     return combo
+
+
+def stepped(slider, labels: list[str]):
+    """Slider with tick marks and a label under every step (for the few-step hardware sliders)."""
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
+    box = QWidget()
+    v = QVBoxLayout(box)
+    v.setContentsMargins(0, 0, 0, 0)
+    v.setSpacing(0)
+    slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+    slider.setTickInterval(1)
+    v.addWidget(slider)
+    row = QHBoxLayout()
+    row.setContentsMargins(4, 0, 4, 0)
+    for i, text in enumerate(labels):
+        lab = QLabel(text, objectName='hint')
+        lab.setAlignment(Qt.AlignmentFlag.AlignLeft if i == 0 else
+                         Qt.AlignmentFlag.AlignRight if i == len(labels) - 1 else Qt.AlignmentFlag.AlignHCenter)
+        row.addWidget(lab, 1)
+    v.addLayout(row)
+    return box

@@ -25,7 +25,7 @@ from keyboardlight.devices.odyssey_macros import MODES
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
 from keyboardlight.gui.macro_page import MacroPage
 from keyboardlight.gui.aula_page import AulaPage
-from keyboardlight.gui.widgets import nav_only
+from keyboardlight.gui.widgets import nav_only, stepped
 from keyboardlight.devices import aula as aula_dev
 from keyboardlight.devices import detect
 from keyboardlight.i18n import _
@@ -543,7 +543,8 @@ class MainWindow(QMainWindow):
         self.bright = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=4, pageStep=1)
         self.bright.setToolTip(_('jas celé klávesnice (0 = zhasnuto)'))
         self.bright.valueChanged.connect(self._lighting_changed)
-        jas.addWidget(self.bright, 1)
+        self.bright_box = stepped(self.bright, [_('zhasnuto'), '1', '2', '3', _('max')])
+        jas.addWidget(self.bright_box, 1)
         self.intensity = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=100, value=100)
         self.intensity.setToolTip(_('jas vybraných kláves nebo celé klávesnice – každá klávesa může mít jiný'))
         self.intensity.valueChanged.connect(self._intensity_changed)
@@ -564,9 +565,10 @@ class MainWindow(QMainWindow):
         self.speed_lbl = QLabel(_('Rychlost'))
         g.addWidget(self.speed_lbl, 2, 0)
         self.speed = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=4, pageStep=1)
-        self.speed.setToolTip('vlevo pomalu, vpravo rychle')
+        self.speed.setToolTip(_('vlevo pomalu, vpravo rychle'))
         self.speed.valueChanged.connect(self._lighting_changed)
-        g.addWidget(self.speed, 2, 1)
+        self.speed_box = stepped(self.speed, [_('pomalu'), '2', '3', '4', _('rychle')])
+        g.addWidget(self.speed_box, 2, 1)
 
         dirs = QHBoxLayout()
         self.dir_lr = QRadioButton(_('Zleva doprava'))
@@ -672,7 +674,7 @@ class MainWindow(QMainWindow):
         self.custom_box.setVisible(custom)
         # show only controls that do something for the current effect
         every = self.show_all.isChecked() and not custom and not off
-        for wdg in (self.speed_lbl, self.speed):
+        for wdg in (self.speed_lbl, self.speed_box):
             wdg.setVisible(eff not in NO_SPEED or every)
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION or every)
@@ -686,11 +688,13 @@ class MainWindow(QMainWindow):
         self.color_panel.setVisible(not off and not fixed)
         self.fixed_hint.setText(_('Tento efekt je vždy duhový – volba „Duhové barvy“ mění jen druh pohybu '
                                   '(kruhy ze středu / přelévání).') if eff == 18 else
+                                _('Tento efekt svítí celou klávesnicí bíle – barvu, duhu, rychlost ani směr '
+                                  'nastavit nejde (na psaní viditelně nereaguje).') if eff == 17 else
                                 _('Tento efekt má vlastní pevné barvy – volba barvy ani duhy na něj nemá vliv.'))
         self.fixed_hint.setVisible(fixed)
         self.color_preview.setVisible(not custom)
         # one "Jas" control: hardware brightness for effects, per-key intensity for custom colours
-        self.bright.setVisible(not custom and not off)
+        self.bright_box.setVisible(not custom and not off)
         for wdg in (self.intensity, self.intensity_lbl, self.int_sel, self.int_all):
             wdg.setVisible(custom)
         if custom:
