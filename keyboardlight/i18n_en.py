@@ -229,6 +229,11 @@ EN = {
     'Baterie: {pct} %': 'Battery: {pct} %',
     'Stav baterie hlásí klávesnice jen přes Bluetooth.': 'The keyboard reports its battery level only over Bluetooth.',
 
+    'Klávesnice nesvítí, i když je vše nastavené (ani Fn + Del nepomáhá)? Firmware se po přepnutí z baterie na kabel někdy zasekne: odpojte kabel, přepněte přepínač na 2.4G a zpět na TYP-C a kabel znovu zapojte.':
+        'Keyboard stays dark although everything is set (even Fn + Del does nothing)? The firmware sometimes gets stuck '
+        'after switching from battery to cable: unplug the cable, move the switch to 2.4G and back to TYP-C, plug the '
+        'cable in again.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

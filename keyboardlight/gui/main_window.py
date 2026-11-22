@@ -848,6 +848,9 @@ class MainWindow(QMainWindow):
                                   'jas obrazovky (KDE Plasma).'), objectName='hint', wordWrap=True)
         v.addWidget(self.knob_hint)
         self._update_knob_btn()
+        v.addWidget(QLabel(_('Klávesnice nesvítí, i když je vše nastavené (ani Fn + Del nepomáhá)? Firmware se po '
+                             'přepnutí z baterie na kabel někdy zasekne: odpojte kabel, přepněte přepínač na 2.4G '
+                             'a zpět na TYP-C a kabel znovu zapojte.'), objectName='hint', wordWrap=True))
         lang_row = QHBoxLayout()
         lang_row.addWidget(QLabel('Jazyk / Language:'))
         self.lang_cb = QComboBox()

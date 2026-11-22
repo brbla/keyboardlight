@@ -72,6 +72,14 @@ keyboardlight --profile Night        # apply a saved profile without opening the
 | Evision Kreo Hive and other boards with `320f:5055` | `320f:5055` | likely works (same OEM board), untested |
 | AULA 60HE (Hall-effect) | – | planned |
 
+## Troubleshooting
+
+- **Keyboard stays dark** although the app shows a lighting setting (Fn + Del does nothing): the firmware sometimes
+  keeps the backlight asleep after switching from battery to cable. Unplug the cable, move the switch to 2.4G and
+  back to TYP-C, plug the cable in again.
+- **Keyboard not found:** use the cable (switch TYP-C) or the 2.4 GHz receiver (switch 2.4G) – Bluetooth cannot be
+  used for configuration. After installing from source, re-plug the keyboard so the udev rule applies.
+
 ## How it works
 
 The protocol was reverse-engineered on Linux (usbmon captures, a webcam watching the LEDs, and static
@@ -113,5 +121,8 @@ Nebo ze zdrojů: `git clone https://github.com/brbla/keyboardlight.git && cd key
 Pak klávesnici odpojte a znovu připojte a spusťte **KeyBoardLight** z nabídky aplikací.
 Klávesnici připojte **kabelem** (přepínač vespod na **TYP-C**) **nebo přes USB přijímač 2,4 GHz** (přepínač na **2.4G**).
 Přes **Bluetooth** nastavovat nejde, ale vše, co nastavíte, je uložené v klávesnici a funguje i přes Bluetooth.
+
+**Klávesnice nesvítí**, i když je vše nastavené a nepomáhá ani Fn + Del? Odpojte kabel, přepněte přepínač na 2.4G
+a zpět na TYP-C a kabel znovu zapojte (firmware se po přepnutí z baterie na kabel občas zasekne).
 
 Aplikace není oficiálním produktem firmy Yenkee / FAST ČR.
