@@ -258,8 +258,8 @@ Resets lighting to wave + rainbow, per-key colours to factory (WASD + arrows whi
 
 ## Edge light strip (underglow around the case) – config byte 0x1B (webcam + user verified 2026-11-22)
 00 rainbow flowing around (factory default) · 01 one colour slowly changing · 02 pulsing · 03 static colour gradient ·
-04 rainbow running symmetrically up and down · 05 rainbow rotating around with fixed spacing · 06 (and higher) off.
-The strip shares brightness and Fn+Del with the keys (brightness 0 / Fn+Del turn it off too).
+04 rainbow up and down – a blue front runs up both sides from the bottom middle, meets at the top and comes back down · 05 rainbow rotating around with fixed spacing · 06 (and higher) off.
+The strip shares brightness, **speed** (main speed byte 0x03, user-verified) and Fn+Del with the keys (brightness 0 / Fn+Del turn it off too).
 0x1C (03) and 0x1D (01): no visible change on the strip when set to 00…05. 0x12: unknown.
 Before the factory reset the user's board had 0x1B = 06 (strip off) and 0x12 = 01.
 **Fn + right Ctrl** cycles 0x1B (found 2026-11-22; explains an earlier unexplained 00→04 change).

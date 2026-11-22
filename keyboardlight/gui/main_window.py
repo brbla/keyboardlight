@@ -422,9 +422,12 @@ class MainWindow(QMainWindow):
         i = self.edge_cb.findData(mode)
         self.edge_cb.setCurrentIndex(i if i >= 0 else self.edge_cb.count() - 1)
         self.edge_cb.blockSignals(False)
+        if self.light:
+            self._update_lighting_widgets()
 
     def _edge_changed(self):
         mode = self.edge_cb.currentData()
+        self._update_lighting_widgets()
         if getattr(self, 'demo', False):
             self._edge_mode = mode
             self._refresh_keyboard()
@@ -559,7 +562,7 @@ class MainWindow(QMainWindow):
             self.kbd.colors = {k.slot: QColor(*self.key_colors[k.slot]) for k in KEYS if any(self.key_colors[k.slot])}
         else:
             self.kbd.colors = frame(self.light, t, self._presses)
-        self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), t, self.light.brightness)
+        self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), t, self.light.brightness, self.light.speed)
         self.kbd.update()
 
     def eventFilter(self, obj: QObject, ev: QEvent) -> bool:
@@ -580,7 +583,7 @@ class MainWindow(QMainWindow):
         self.kbd.edge_colors = None
         if page == 0 and self.light and hasattr(self, 'edge_cb') and not self._aula_mode():
             from keyboardlight.gui.effect_preview import edge_frame
-            self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), 0.0, self.light.brightness)
+            self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), 0.0, self.light.brightness, self.light.speed)
         if self._animating():
             if not self._anim_timer.isActive():
                 self._anim_timer.start()
@@ -772,8 +775,11 @@ class MainWindow(QMainWindow):
         self.custom_box.setVisible(custom)
         # show only controls that do something for the current effect
         every = self.show_all.isChecked() and not custom and not off
+        edge = self.edge_cb.currentData() if hasattr(self, 'edge_cb') else None
+        edge_moves = edge in (0, 1, 2, 4, 5)              # the strip follows the main speed setting
         for wdg in (self.speed_lbl, self.speed_box):
-            wdg.setVisible(eff not in NO_SPEED or every)
+            wdg.setVisible(eff not in NO_SPEED or every or (edge_moves and not off))
+        self.speed_lbl.setText(_('Rychlost lemu') if eff in NO_SPEED and edge_moves and not every else _('Rychlost'))
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION or every)
         first, second = DIRECTION_LABELS.get(eff, (_('Zleva doprava'), _('Zprava doleva')))

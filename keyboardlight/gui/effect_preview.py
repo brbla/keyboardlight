@@ -153,12 +153,13 @@ def frame(light, t: float, presses: list[tuple[int, float]]) -> dict[int, QColor
 EDGE_SEGMENTS = 160
 
 
-def edge_frame(mode: int, t: float, brightness: int) -> list[QColor] | None:
+def edge_frame(mode: int, t: float, brightness: int, speed: int = 2) -> list[QColor] | None:
     """Colours of the edge strip (underglow), EDGE_SEGMENTS points around the case starting at the bottom middle
     and going clockwise. Approximation of what the webcam and the user saw (docs/odyssey-protocol.md)."""
     if mode is None or mode >= 6 or brightness <= 0:
         return None
     gain = brightness / 4
+    t = t * SPEED[max(0, min(4, speed))] / SPEED[2]   # the strip follows the main speed setting (user-verified)
     out = []
     for i in range(EDGE_SEGMENTS):
         s = i / EDGE_SEGMENTS
@@ -173,8 +174,10 @@ def edge_frame(mode: int, t: float, brightness: int) -> list[QColor] | None:
             val = 0.5 - 0.5 * math.cos(t * 1.6)
         elif mode == 3:                             # static gradient
             h = 0.62 - 0.3 * u
-        elif mode == 4:                             # rainbow running symmetrically up and down
-            h = u * 0.8 - t * 0.3
+        elif mode == 4:                             # blue front runs up both sides, meets at the top, comes back
+            ph = (t / 2.0) % 2.0
+            front = ph if ph < 1 else 2 - ph        # 0 = bottom middle, 1 = top middle (bounces)
+            h = 0.66 + (u - front) * 0.9
         else:                                       # 5: rainbow rotating around, fixed spacing
             h = s * 3 - t * 0.5
         r, g, b = _rgb(h, val * gain)

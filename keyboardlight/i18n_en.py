@@ -397,7 +397,7 @@ EN = {
     'Jedna barva, pomalu se mění': 'One colour, slowly changing',
     'Pulzování': 'Pulsing',
     'Statický barevný přechod': 'Static colour gradient',
-    'Duha běží symetricky nahoru a dolů': 'Rainbow running symmetrically up and down',
+    'Duha nahoru a dolů (modrá se srazí nahoře a dole)': 'Rainbow up and down (blue meets at the top and bottom)',
     'Duha rotuje dokola': 'Rainbow rotating around',
     'lem': 'edge',
     'Lem klávesnice: {mode}': 'Keyboard edge: {mode}',
@@ -411,6 +411,8 @@ EN = {
     'Demo – klávesnice není připojená: efekty si můžete vyzkoušet, nic se nezapisuje.': 'Demo – keyboard not connected: try the effects here, nothing is written.',
 
     'Yenkee Odyssey\ndemo – nepřipojeno': 'Yenkee Odyssey\ndemo – not connected',
+
+    'Rychlost lemu': 'Edge speed',
 
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
