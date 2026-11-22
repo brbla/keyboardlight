@@ -3,6 +3,8 @@
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="320f", ATTRS{idProduct}=="5055", MODE="0660", TAG+="uaccess"
 # Yenkee Odyssey 2.4 GHz USB receiver (Telink "Wireless Gaming Keyboard")
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="320f", ATTRS{idProduct}=="5088", MODE="0660", TAG+="uaccess"
+# AULA WIN60 HE / WIN68 HE / WIN75 HE Standard (web driver hed.aulacn.com)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="2e3c", ATTRS{idProduct}=="c365", MODE="0660", TAG+="uaccess"
 # AULA HERO / HE series (WebHID driver hero.aulastar.com)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="372e", MODE="0660", TAG+="uaccess"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="fb35", MODE="0660", TAG+="uaccess"

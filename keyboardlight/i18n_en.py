@@ -244,6 +244,10 @@ EN = {
         'If downloading fails, refresh the mirrors: sudo cachyos-rate-mirrors (CachyOS)\n'
         'or sudo pacman -Syyu, then run the command again.',
 
+    'Vyzkoušejte efekt – pište sem (klávesnice reaguje na stisky)': 'Try the effect – type here (the keyboard reacts to key presses)',
+    'Reaktivní efekty (Vlnky, Reakce na stisk…) reagují na skutečné stisky kláves. Pište sem – nic se tím nepřepne.':
+        'Reactive effects (Ripples, Reactive…) react to real key presses. Type here – nothing gets switched.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

@@ -52,6 +52,7 @@ def swatch(color: str, cb) -> QPushButton:
     b.setStyleSheet(f'background: {color};')
     b.setToolTip(color)
     b.clicked.connect(lambda: cb(QColor(color)))
+    b.setFocusPolicy(Qt.FocusPolicy.NoFocus)
     return b
 
 
@@ -96,6 +97,7 @@ class MainWindow(QMainWindow):
         self.pages = QStackedWidget()
         for i, name in enumerate([_('💡  Podsvícení'), _('⌨  Klávesy'), _('⏺  Makra'), _('⚙  Další')]):
             b = QPushButton(name, objectName='nav', checkable=True)
+            b.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.nav.addButton(b, i)
             sl.addWidget(b)
         sl.addStretch()
@@ -321,6 +323,7 @@ class MainWindow(QMainWindow):
         for val, name, note in EFFECTS:
             self.effect_cb.addItem(name + (f'  ({note})' if note else ''), val)
         self.effect_cb.currentIndexChanged.connect(self._lighting_changed)
+        self.effect_cb.activated.connect(lambda _i: self.try_edit.setFocus())
         g.addWidget(self.effect_cb, 0, 1)
 
         g.addWidget(QLabel(_('Jas')), 1, 0)
@@ -382,6 +385,15 @@ class MainWindow(QMainWindow):
         colbox.addLayout(row)
         g.addWidget(self.color_panel, 0, 2, 4, 1)
 
+        # keyboard input must not change these controls while the user tries an effect on the keyboard
+        for wdg in (self.effect_cb, self.bright, self.speed, self.intensity, self.dir_lr, self.dir_rl,
+                    self.rainbow, self.int_sel, self.int_all):
+            wdg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.try_edit = QLineEdit(placeholderText=_('Vyzkoušejte efekt – pište sem (klávesnice reaguje na stisky)'))
+        self.try_edit.setToolTip(_('Reaktivní efekty (Vlnky, Reakce na stisk…) reagují na skutečné stisky kláves. '
+                                   'Pište sem – nic se tím nepřepne.'))
+        g.addWidget(self.try_edit, 5, 0, 1, 3)
+
         # per-key section
         self.custom_box = QFrame()
         cb = QHBoxLayout(self.custom_box)
@@ -401,7 +413,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(5, 1)
+        g.setRowStretch(6, 1)
         return w
 
     def _load_lighting_ui(self):
