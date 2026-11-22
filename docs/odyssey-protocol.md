@@ -203,3 +203,10 @@ https://data.fast.eu/manual/45/45021093/45021093-im.pdf) + own tests (✔ = veri
 Hardware: 75 % layout, 82 keys, rotary knob, switch on the bottom: 2.4G (left) / BT (middle) / TYP-C wired (right).
 Backlight turns off after 3 min idle on battery; sleep after 10 min.
 Windows software: https://data.fast.eu/software/45/45021093/45021093-sw.zip ("ODYSSEY software suite").
+
+## Colour / rainbow support per effect (webcam test 2026-11-22, red vs rainbow, with typing)
+- Honour colour **and** rainbow: 6 static, 1 wave, 5 breath, 2 cloud, 3 serpentine, 10 stars, 13 waving, 14 circles,
+  15 rain, 16 scan; reactive (only light on key press): 7 reaction, 8 ripples, 9 traverse (row runs from the key).
+- Own fixed colours, colour + rainbow ignored: 4 spectrum (whole board cycles hues), 11 flowers, 12 rows,
+  18 centre transition (multicolour), 17 transition reaction (white).
+- 14 circles is an autonomous animation, not reactive.

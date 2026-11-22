@@ -65,6 +65,7 @@ EFFECTS = [  # value, Czech name, note
 EFFECT_CUSTOM = 19
 EFFECT_OFF = 20
 NO_SPEED = {6, EFFECT_CUSTOM, EFFECT_OFF}       # nothing moves
+FIXED_COLORS = {4, 11, 12, 17, 18}                # own colours; colour + rainbow ignored (webcam-verified)
 WITH_DIRECTION = {1}                           # vendor app shows the direction switch only here (Fn+← verified)
 PRESET_COLORS = ['#ff0000', '#ff6000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff',
                  '#ff00ff', '#ff0080', '#ffa000', '#80ff80', '#40ffff', '#004080', '#ffffff']

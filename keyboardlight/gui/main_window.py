@@ -17,7 +17,7 @@ from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFE
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
 from keyboardlight import aula_profiles, battery, firmware, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
-from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRECTION, macro_entry
+from keyboardlight.devices.odyssey_layout import EFFECT_OFF, FIXED_COLORS, NO_SPEED, WITH_DIRECTION, macro_entry
 from keyboardlight.devices.odyssey_macros import MODES
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
 from keyboardlight.gui.macro_page import MacroPage
@@ -451,7 +451,9 @@ class MainWindow(QMainWindow):
                                    if any(self.key_colors[k.slot])}
             elif self.light.effect != 20 and self.light.brightness > 0:
                 for k in KEYS:
-                    if self.light.rainbow:
+                    if self.light.effect == 17:                     # transition reaction: white
+                        self.kbd.colors[k.slot] = QColor(235, 235, 235)
+                    elif self.light.rainbow or self.light.effect in FIXED_COLORS:
                         r, g, b = colorsys.hsv_to_rgb(k.x / 16.5, 1, 1)
                         self.kbd.colors[k.slot] = QColor(int(r * 255), int(g * 255), int(b * 255))
                     else:
@@ -532,6 +534,9 @@ class MainWindow(QMainWindow):
         row.addWidget(self.color_preview)
         colbox.addLayout(row)
         g.addWidget(self.color_panel, 0, 2, 4, 1)
+        self.fixed_hint = QLabel(_('Tento efekt má vlastní pevné barvy – volba barvy ani duhy na něj nemá vliv.'),
+                                 objectName='hint', wordWrap=True)
+        g.addWidget(self.fixed_hint, 0, 2, 4, 1)
 
         # keyboard input must not change these controls while the user tries an effect on the keyboard
         nav_only(self.effect_cb)
@@ -591,8 +596,10 @@ class MainWindow(QMainWindow):
             wdg.setVisible(eff not in NO_SPEED)
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION)
-        self.rainbow.setVisible(not custom and not off)
-        self.color_panel.setVisible(not off)
+        fixed = eff in FIXED_COLORS
+        self.rainbow.setVisible(not custom and not off and not fixed)
+        self.color_panel.setVisible(not off and not fixed)
+        self.fixed_hint.setVisible(fixed)
         self.color_preview.setVisible(not custom)
         # one "Jas" control: hardware brightness for effects, per-key intensity for custom colours
         self.bright.setVisible(not custom and not off)
