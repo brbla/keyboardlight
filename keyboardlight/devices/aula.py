@@ -120,6 +120,34 @@ class Aula:
             return None
         return ((block[6] << 8) | block[2]) / 100
 
+    # ---- actuation write: 21 00 00 00 18 [mode] [22-byte key bitmask] … [28] press lo [29] release lo
+    #      [30] RT press sensitivity [31] RT release sensitivity [32] press hi [33] release hi
+    #      bitmask: byte 6+col, bit = row (index = row*22+col); mode 0x0d = rapid trigger on, 0x0c = off
+    def write_actuation(self, indices, rapid: bool, press_mm: float, release_mm: float,
+                        rt_press_mm: float, rt_release_mm: float) -> None:
+        f = bytearray(63)
+        f[0:5] = bytes([0x21, 0, 0, 0, 0x18])
+        f[5] = 0x0D if rapid else 0x0C
+        for idx in indices:
+            row, col = divmod(idx, 22)
+            f[6 + col] |= 1 << row
+        p, r = round(press_mm * 100), round(release_mm * 100)
+        f[28], f[29], f[32], f[33] = p & 0xFF, r & 0xFF, p >> 8, r >> 8
+        f[30], f[31] = round(rt_press_mm * 100), round(rt_release_mm * 100)
+        self.xfer(bytes(f), first=0.3)
+        for idx in indices:
+            b = self.read_key_block(idx)
+            if self.decode_actuation(b) != (rapid, p / 100, r / 100, f[30] / 100, f[31] / 100):
+                raise AulaError(_('ověření nastavení spínačů selhalo'))
+
+    @staticmethod
+    def decode_actuation(block: bytes):
+        """(rapid trigger on, press mm, release mm, RT press mm, RT release mm) from a 12-byte key block."""
+        if len(block) < 8:
+            return None
+        return (bool(block[1] & 1), ((block[6] << 8) | block[2]) / 100, ((block[7] << 8) | block[3]) / 100,
+                block[4] / 100, block[5] / 100)
+
     # ---- per-key custom colours (effect 10), 0x18c-byte buffer, index*3 = R G B --------------
     COLORS_LEN, COLORS_CHUNK = 0x18C, 0x36
 
@@ -153,6 +181,9 @@ def backup_areas(path: str) -> dict:
             out['light'] = rx[0][5:5 + rx[0][4]]
         elif e['label'] == 'lighting 08 01' and rx:
             out['side'] = rx[0][5:5 + rx[0][4]]
+        elif e['label'].startswith('keys 21 05 r') and rx and len(rx[0]) > 16:
+            lab = e['label'].split()
+            out.setdefault('keys', {})[int(lab[3][1:]) * 22 + int(lab[4][1:])] = rx[0][5:17]
         elif e['label'] in ('rgb 09 80', 'rgb 09 81'):
             buf = bytearray(Aula.COLORS_LEN)
             for rep in rx:
@@ -213,4 +244,15 @@ def restore(dev: 'Aula', path: str) -> list[str]:
     if 'side' in areas and dev.read_lighting_raw(True) != areas['side']:
         dev.write_lighting_raw(areas['side'], True)
         done.append(_('boční podsvícení'))
+    if 'keys' in areas:
+        from keyboardlight.devices.aula_layout import KEYS
+        groups: dict = {}
+        for k in KEYS:
+            want = Aula.decode_actuation(areas['keys'].get(k.slot, b''))
+            if want and Aula.decode_actuation(dev.read_key_block(k.slot)) != want:
+                groups.setdefault(want, []).append(k.slot)
+        for (rapid, p, r, rp, rr), idx in groups.items():
+            dev.write_actuation(idx, rapid, p, r, rp, rr)
+        if groups:
+            done.append(_('spínače ({n} kláves)').format(n=sum(len(v) for v in groups.values())))
     return done

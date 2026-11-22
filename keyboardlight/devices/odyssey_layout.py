@@ -58,8 +58,8 @@ EFFECTS = [  # value, Czech name, note
     (6, _('Statické'), ''), (1, _('Vlnění'), ''), (4, _('Spektrum'), ''), (5, _('Dýchání'), ''), (2, _('Mrak'), ''),
     (3, _('Serpentýna'), ''), (8, _('Vlnky'), _('reaguje na stisk')), (7, _('Reakce na stisk'), _('reaguje na stisk')),
     (9, _('Přechod'), _('reaguje na stisk')), (11, _('Květiny'), ''), (10, _('Hvězdy'), ''), (12, _('Řádky'), ''),
-    (13, _('Mávání'), ''), (14, _('Kulatá animace'), _('reaguje na stisk')), (15, _('Déšť'), ''), (16, _('Skenovat'), ''),
-    (17, _('Přechodová reakce'), _('reaguje na stisk')), (18, _('Přechod ze středu'), ''),
+    (13, _('Mávání'), ''), (14, _('Kulatá animace'), ''), (15, _('Déšť'), ''), (16, _('Skenovat'), ''),
+    (17, _('Přechodová reakce'), ''), (18, _('Přechod ze středu'), ''),
     (19, _('Vlastní barvy kláves'), ''), (20, _('Vypnuto'), ''),
 ]
 EFFECT_CUSTOM = 19

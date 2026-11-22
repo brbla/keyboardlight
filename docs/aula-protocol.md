@@ -32,10 +32,14 @@ Tool: `tools/aula_backup.py` replays all of them and stores request/replies as J
   = effect 15 (striation), speed 4, brightness 2.
 - Restore verified: writing the original 12 bytes back returns the keyboard to its original look.
 
-## Per-key block – `21 00 00 00 18 05 ROW COL`
-Reply `21 00 00 00 0c 05 [6 bytes] … ROW COL`; on the son's board e.g. `aa aa 01 01` – per-key travel values
-(AulaControl: trigger/reset travel in 0.01 mm). Write format per AulaControl: `21 00 00 00 18 ROW COL 00 08 …` –
-**not yet verified on WIN68**.
+## Actuation / rapid trigger – `21` (verified on WIN68 HE, write + read-back + restore)
+- Read: `21 00 00 00 18 05 ROW COL` → block `[05][MODE][press lo][release lo][RT press][RT release][press hi][release hi]…`
+  (values in 0.01 mm; the reply's length byte under-reports, take 12 bytes).
+- Write (any number of keys at once):
+  `21 00 00 00 18 [MODE] [22-byte bitmask: byte 6+col, bit = row] … [28] press lo [29] release lo
+  [30] RT press [31] RT release [32] press hi [33] release hi`, reply `21 00 00 00 01`.
+- `MODE` 0x0d = rapid trigger **on**, 0x0c = off. Son's original: all 68 keys `0d`, press/release 0.08 mm,
+  RT sensitivity 0.01/0.01 mm.
 
 ## Per-key colours – `09` (verified)
 Buffer 0x18C bytes, key index × 3 = R G B (index = row × 22 + col). Read `09 80` (slot 0) / `09 81` (slot 1) →

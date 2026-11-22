@@ -7,7 +7,7 @@ import time
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+from PyQt6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QMessageBox, QPushButton, QSlider, QTabWidget, QVBoxLayout, QWidget)
 
 from keyboardlight.devices import aula_layout as L
@@ -52,7 +52,7 @@ class AulaPage(QWidget):
             self.dev = Aula()
             info = self.dev.info()
             self.light = bytearray(self.dev.read_lighting_raw())
-            self.act = {k.slot: Aula.actuation_mm(self.dev.read_key_block(k.slot)) for k in L.KEYS}
+            self.act = {k.slot: Aula.decode_actuation(self.dev.read_key_block(k.slot)) for k in L.KEYS}
         except (AulaError, OSError) as e:
             self.status(str(e))
             if self.dev:
@@ -173,20 +173,88 @@ class AulaPage(QWidget):
     # ------------------------------------------------------------------ actuation
     def _build_act(self):
         w = QFrame(objectName='panel')
-        v = QVBoxLayout(w)
-        v.addWidget(QLabel(_('Bod sepnutí každé klávesy (mm) – jak je uložený v klávesnici.'), objectName='title'))
-        v.addWidget(QLabel(_('Čím menší číslo, tím dřív klávesa sepne (citlivější). Změnu bodu sepnutí aplikace '
-                             'zatím neumí – nejdřív ji ověříme i s návratem do původního stavu.'),
-                           objectName='hint', wordWrap=True))
-        v.addStretch()
+        g = QGridLayout(w)
+        self.act_title = QLabel(_('Vyber klávesy na obrázku (Ctrl = přidat/odebrat, tažením více)'), objectName='title')
+        g.addWidget(self.act_title, 0, 0, 1, 4)
+
+        def spin(lo, hi, val):
+            sb = QDoubleSpinBox(minimum=lo, maximum=hi, singleStep=0.01, decimals=2, value=val, suffix=' mm')
+            return sb
+        g.addWidget(QLabel(_('Bod sepnutí')), 1, 0)
+        self.press = spin(0.01, 3.40, 1.20)
+        g.addWidget(self.press, 1, 1)
+        g.addWidget(QLabel(_('menší = citlivější (sepne dřív)'), objectName='hint'), 1, 2, 1, 2)
+        self.rapid = QCheckBox(_('Rapid trigger (klávesa se uvolní hned při pohybu nahoru)'))
+        self.rapid.toggled.connect(self._rapid_toggled)
+        g.addWidget(self.rapid, 2, 0, 1, 4)
+        self.rt_lbl1 = QLabel(_('Citlivost stisku'))
+        g.addWidget(self.rt_lbl1, 3, 0)
+        self.rt_press = spin(0.01, 2.00, 0.10)
+        g.addWidget(self.rt_press, 3, 1)
+        self.rt_lbl2 = QLabel(_('Citlivost uvolnění'))
+        g.addWidget(self.rt_lbl2, 3, 2)
+        self.rt_release = spin(0.01, 2.00, 0.10)
+        g.addWidget(self.rt_release, 3, 3)
+        row = QHBoxLayout()
+        b = QPushButton(_('Vybrat vše'))
+        b.clicked.connect(lambda: self.kbd.set_selected({k.slot for k in L.KEYS}))
+        row.addWidget(b)
+        self.apply_act_btn = QPushButton(_('Použít na vybrané klávesy'))
+        self.apply_act_btn.clicked.connect(self._apply_act)
+        row.addWidget(self.apply_act_btn)
+        row.addStretch()
+        g.addLayout(row, 4, 0, 1, 4)
+        g.setColumnStretch(3, 1)
+        g.setRowStretch(5, 1)
+        self.kbd.selectionChanged.connect(self._act_selection)
+        self._rapid_toggled(False)
         return w
+
+    def _rapid_toggled(self, on: bool):
+        for wdg in (self.rt_lbl1, self.rt_press, self.rt_lbl2, self.rt_release):
+            wdg.setEnabled(on)
+
+    def _act_selection(self):
+        if self.tabs.currentIndex() != 1:
+            return
+        sel = sorted(self.kbd.selected)
+        self.apply_act_btn.setEnabled(bool(sel) and self.dev is not None)
+        if not sel:
+            self.act_title.setText(_('Vyber klávesy na obrázku (Ctrl = přidat/odebrat, tažením více)'))
+            return
+        self.act_title.setText(_('Vybráno kláves: {n}').format(n=len(sel)))
+        cur = self.act.get(sel[0])
+        if cur:
+            rapid, p, _r, rp, rr = cur
+            self.press.setValue(p)
+            self.rapid.setChecked(rapid)
+            self.rt_press.setValue(rp)
+            self.rt_release.setValue(rr)
+
+    def _apply_act(self):
+        sel = sorted(self.kbd.selected)
+        if not sel or not self.dev:
+            return
+        p = self.press.value()
+        try:
+            self.dev.write_actuation(sel, self.rapid.isChecked(), p, p, self.rt_press.value(), self.rt_release.value())
+        except (AulaError, OSError) as e:
+            QMessageBox.warning(self, 'AULA', str(e))
+        for idx in sel:
+            self.act[idx] = Aula.decode_actuation(self.dev.read_key_block(idx))
+        self._refresh_kbd()
+        self.status(_('Spínače uloženy do klávesnice ({n} kláves)').format(n=len(sel)))
 
     def _refresh_kbd(self):
         self.kbd.colors, self.kbd.labels, self.kbd.marked = {}, {}, set()
+        self.kbd.multi = self.tabs.currentIndex() == 1
         if self.tabs.currentIndex() == 1:
             for k in L.KEYS:
-                mm = self.act.get(k.slot)
-                self.kbd.labels[k.slot] = f'{k.label}\n{mm:.2f}' if mm is not None else k.label
+                cur = self.act.get(k.slot)
+                if cur:
+                    self.kbd.labels[k.slot] = f'{k.label}\n{cur[1]:.2f}' + (' RT' if cur[0] else '')
+        else:
+            self.kbd.set_selected(set())
         self.kbd.update()
 
     # ------------------------------------------------------------------ backup
@@ -195,8 +263,8 @@ class AulaPage(QWidget):
         v = QVBoxLayout(w)
         v.addWidget(QLabel(_('Záloha a obnova'), objectName='title'))
         v.addWidget(QLabel(_('Při prvním připojení aplikace sama uloží původní nastavení klávesnice. „Vrátit '
-                             'nastavení ze zálohy“ zapíše zpět podsvícení a barvy kláves; ostatní nastavení '
-                             '(spínače, SOCD…) aplikace nemění, takže zůstávají původní.'),
+                             'nastavení ze zálohy“ zapíše zpět podsvícení, barvy kláves a spínače (bod sepnutí, '
+                             'rapid trigger); ostatní nastavení (SOCD…) aplikace nemění.'),
                            objectName='hint', wordWrap=True))
         row = QHBoxLayout()
         b = QPushButton(_('Zálohovat teď'))

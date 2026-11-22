@@ -297,6 +297,20 @@ EN = {
     'Reakce na rychlost psaní': 'Speed respond', 'Automatické vlnky': 'Auto ripple', 'Pruhy': 'Striation',
     'Ohňostroj': 'Fireworks',
 
+    'Vyber klávesy na obrázku (Ctrl = přidat/odebrat, tažením více)': 'Select keys in the picture (Ctrl = add/remove, drag for more)',
+    'Bod sepnutí': 'Actuation point',
+    'menší = citlivější (sepne dřív)': 'smaller = more sensitive (actuates earlier)',
+    'Rapid trigger (klávesa se uvolní hned při pohybu nahoru)': 'Rapid trigger (the key releases as soon as it moves up)',
+    'Citlivost stisku': 'Press sensitivity',
+    'Citlivost uvolnění': 'Release sensitivity',
+    'Použít na vybrané klávesy': 'Apply to selected keys',
+    'Spínače uloženy do klávesnice ({n} kláves)': 'Switch settings saved to the keyboard ({n} keys)',
+    'spínače ({n} kláves)': 'switches ({n} keys)',
+    'ověření nastavení spínačů selhalo': 'verifying the switch settings failed',
+    'Při prvním připojení aplikace sama uloží původní nastavení klávesnice. „Vrátit nastavení ze zálohy“ zapíše zpět podsvícení, barvy kláves a spínače (bod sepnutí, rapid trigger); ostatní nastavení (SOCD…) aplikace nemění.':
+        'On first connection the app saves the keyboard\'s original settings. “Restore from backup” writes back the '
+        'lighting, key colours and switch settings (actuation, rapid trigger); other settings (SOCD…) are never changed.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
