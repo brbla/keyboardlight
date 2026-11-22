@@ -216,5 +216,7 @@ Windows software: https://data.fast.eu/software/45/45021093/45021093-sw.zip ("OD
   ff = bottom→top). No effect elsewhere (3 serpentine only looked reversed at full speed – camera aliasing).
 - Speed works: 1, 2, 3, 4, 5, 11, 12, 15; weaker/irregular: 10 stars, 13 waving.
 - Speed has no visible effect: 16 scan (bar sweeps back and forth at any speed), 17, 18.
-- 14 circles: circles seen once in the first run, then nothing in ~75 s at any speed, with or without typing
-  (user confirmed). Trigger unknown.
+- 14 circles: expanding rings at random places, honours colour/rainbow, speed has a small effect. During a long
+  test session it got **stuck dark** (any speed, typing, re-writing the effect did not help); unplugging and
+  replugging the keyboard fixed it, and later config writes did not break it again. Full re-test after the replug:
+  all other results unchanged. The app shows a "disconnect and reconnect" hint on the lighting page.

@@ -352,6 +352,10 @@ EN = {
     'Na klávesnici přepnuto: {effect}': 'Switched on the keyboard: {effect}',
     'Nastavení změněno na klávesnici – načteno': 'Settings changed on the keyboard – reloaded',
 
+    'Efekt nedělá, co má (např. zůstává tmavý)? Klávesnici odpojte a znovu připojte – kabel vytáhněte a zasuňte, u přijímače přepněte přepínač na OFF a zpět. Nastavení zůstane uložené.':
+        'Effect not doing what it should (e.g. stays dark)? Disconnect and reconnect the keyboard – unplug and replug '
+        'the cable, or with the receiver flip the switch to OFF and back. Your settings stay saved.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

@@ -571,6 +571,10 @@ class MainWindow(QMainWindow):
         self.try_edit.setToolTip(_('Reaktivní efekty (Vlnky, Reakce na stisk…) reagují na skutečné stisky kláves. '
                                    'Pište sem – nic se tím nepřepne.'))
         g.addWidget(self.try_edit, 5, 0, 1, 3)
+        self.stuck_hint = QLabel(_('Efekt nedělá, co má (např. zůstává tmavý)? Klávesnici odpojte a znovu připojte – '
+                                   'kabel vytáhněte a zasuňte, u přijímače přepněte přepínač na OFF a zpět. '
+                                   'Nastavení zůstane uložené.'), objectName='hint', wordWrap=True)
+        g.addWidget(self.stuck_hint, 6, 0, 1, 3)
 
         # per-key section
         self.custom_box = QFrame()
@@ -591,7 +595,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(6, 1)
+        g.setRowStretch(7, 1)
         return w
 
     def _load_lighting_ui(self):
