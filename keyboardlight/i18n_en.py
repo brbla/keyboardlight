@@ -346,6 +346,9 @@ EN = {
     'Tento efekt má vlastní pevné barvy – volba barvy ani duhy na něj nemá vliv.':
         'This effect has its own fixed colours – the colour and rainbow options have no effect on it.',
 
+    'Shora dolů': 'Top to bottom',
+    'Zdola nahoru': 'Bottom to top',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
