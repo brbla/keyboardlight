@@ -356,6 +356,11 @@ EN = {
         'Effect not doing what it should (e.g. stays dark)? Disconnect and reconnect the keyboard – unplug and replug '
         'the cable, or with the receiver flip the switch to OFF and back. Your settings stay saved.',
 
+    'Ze středu ven': 'From the centre out',
+    'Do středu': 'Into the centre',
+    'Jedním směrem': 'One way',
+    'Opačným směrem': 'The other way',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

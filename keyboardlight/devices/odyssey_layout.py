@@ -66,8 +66,12 @@ EFFECT_CUSTOM = 19
 EFFECT_OFF = 20
 NO_SPEED = {6, 16, 17, 18, EFFECT_CUSTOM, EFFECT_OFF}   # static, or speed has no visible effect (webcam-verified)
 FIXED_COLORS = {4, 11, 12, 17, 18}                # own colours; colour + rainbow ignored (webcam-verified)
-WITH_DIRECTION = {1, 2, 12}                    # wave, cloud: left/right; rows: up/down (webcam-verified)
-VERTICAL_DIRECTION = {12}
+WITH_DIRECTION = {1, 2, 3, 12, 18}             # webcam-verified; labels for direction 00 / ff:
+DIRECTION_LABELS = {
+    12: (_('Shora dolů'), _('Zdola nahoru')),
+    18: (_('Ze středu ven'), _('Do středu')),
+    3: (_('Jedním směrem'), _('Opačným směrem')),
+}                                              # others: left→right / right→left
 PRESET_COLORS = ['#ff0000', '#ff6000', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8000ff',
                  '#ff00ff', '#ff0080', '#ffa000', '#80ff80', '#40ffff', '#004080', '#ffffff']
 

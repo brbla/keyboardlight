@@ -17,7 +17,7 @@ from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFE
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
 from keyboardlight import aula_profiles, battery, firmware, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
-from keyboardlight.devices.odyssey_layout import (EFFECT_OFF, FIXED_COLORS, NO_SPEED, VERTICAL_DIRECTION,
+from keyboardlight.devices.odyssey_layout import (DIRECTION_LABELS, EFFECT_OFF, FIXED_COLORS, NO_SPEED,
                                                   WITH_DIRECTION, macro_entry)
 from keyboardlight.devices.odyssey_macros import MODES
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
@@ -624,9 +624,9 @@ class MainWindow(QMainWindow):
             wdg.setVisible(eff not in NO_SPEED)
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION)
-        vertical = eff in VERTICAL_DIRECTION
-        self.dir_lr.setText(_('Shora dolů') if vertical else _('Zleva doprava'))
-        self.dir_rl.setText(_('Zdola nahoru') if vertical else _('Zprava doleva'))
+        first, second = DIRECTION_LABELS.get(eff, (_('Zleva doprava'), _('Zprava doleva')))
+        self.dir_lr.setText(first)
+        self.dir_rl.setText(second)
         fixed = eff in FIXED_COLORS
         self.rainbow.setVisible(not custom and not off and not fixed)
         self.color_panel.setVisible(not off and not fixed)

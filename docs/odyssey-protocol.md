@@ -213,7 +213,9 @@ Windows software: https://data.fast.eu/software/45/45021093/45021093-sw.zip ("OD
 
 ## Speed / direction per effect (webcam test 2026-11-22; speed byte 0 fastest … 4 slowest)
 - Direction works: 1 wave and 2 cloud (00 = moves left→right, ff = right→left), 12 rows (00 = top→bottom,
-  ff = bottom→top). No effect elsewhere (3 serpentine only looked reversed at full speed – camera aliasing).
+  ff = bottom→top), 18 centre transition (00 = rainbow rings run outwards, ff = inwards; found with a radial
+  analysis after the user pointed out the rings), 3 serpentine (motion reverses, clearest in the top row).
+- No direction: 13 waving (line always travels right), 15 rain (always falls), others.
 - Speed works: 1, 2, 3, 4, 5, 11, 12, 15; weaker/irregular: 10 stars, 13 waving.
 - Speed has no visible effect: 16 scan (bar sweeps back and forth at any speed), 17, 18.
 - 14 circles: expanding rings at random places, honours colour/rainbow, speed has a small effect. During a long
