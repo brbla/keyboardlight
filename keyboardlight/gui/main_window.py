@@ -15,7 +15,7 @@ from keyboardlight.devices.odyssey import BACKUP_DIR, Lighting, Odyssey, Odyssey
 from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFECT_CUSTOM, EFFECTS, EVDEV_MODIFIER,
                                                   EVDEV_TO_HID, FN_SLOT, HID_NAMES, KEY_BY_SLOT, KEYS, MODIFIERS,
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
-from keyboardlight import i18n, profiles
+from keyboardlight import i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
 from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRECTION, macro_entry
 from keyboardlight.devices.odyssey_macros import MODES
@@ -823,6 +823,13 @@ class MainWindow(QMainWindow):
         b = QPushButton(_('Tovární barvy kláves (WASD + šipky bíle)'))
         b.clicked.connect(self._factory_colors)
         v.addWidget(b, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.knob_btn = QPushButton()
+        self.knob_btn.clicked.connect(self._toggle_knob_brightness)
+        v.addWidget(self.knob_btn, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.knob_hint = QLabel(_('Knoflík ve firmwaru vždy mění hlasitost. S tímto nastavením mění Ctrl + knoflík '
+                                  'jas obrazovky (KDE Plasma).'), objectName='hint', wordWrap=True)
+        v.addWidget(self.knob_hint)
+        self._update_knob_btn()
         lang_row = QHBoxLayout()
         lang_row.addWidget(QLabel('Jazyk / Language:'))
         self.lang_cb = QComboBox()
@@ -837,6 +844,26 @@ class MainWindow(QMainWindow):
                            objectName='hint'))
         v.addStretch()
         return w
+
+    def _update_knob_btn(self):
+        ok = kde_shortcuts.available()
+        self.knob_btn.setVisible(ok)
+        self.knob_hint.setVisible(ok)
+        if ok:
+            on = kde_shortcuts.is_enabled()
+            self.knob_btn.setText(_('Zrušit: Ctrl + knoflík = jas obrazovky') if on
+                                  else _('Nastavit: Ctrl + knoflík = jas obrazovky'))
+
+    def _toggle_knob_brightness(self):
+        try:
+            on = not kde_shortcuts.is_enabled()
+            kde_shortcuts.set_enabled(on)
+        except (RuntimeError, OSError) as e:
+            QMessageBox.warning(self, 'KeyBoardLight', str(e))
+            return
+        self._update_knob_btn()
+        self.statusBar().showMessage(_('Ctrl + knoflík teď mění jas obrazovky') if on
+                                     else _('Ctrl + knoflík už jas obrazovky nemění'), 4000)
 
     def _language_changed(self):
         code = self.lang_cb.currentData()

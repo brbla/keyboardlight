@@ -214,6 +214,14 @@ EN = {
     'Opakování kláves při držení nastavíte v KDE: Nastavení systému → Klávesnice.':
         'Key repeat while holding is set in your desktop settings (KDE: System Settings → Keyboard).',
 
+    'Knoflík ve firmwaru vždy mění hlasitost. S tímto nastavením mění Ctrl + knoflík jas obrazovky (KDE Plasma).':
+        'The knob always changes the volume (fixed in firmware). With this setting Ctrl + knob changes the screen '
+        'brightness (KDE Plasma).',
+    'Zrušit: Ctrl + knoflík = jas obrazovky': 'Remove: Ctrl + knob = screen brightness',
+    'Nastavit: Ctrl + knoflík = jas obrazovky': 'Set up: Ctrl + knob = screen brightness',
+    'Ctrl + knoflík teď mění jas obrazovky': 'Ctrl + knob now changes the screen brightness',
+    'Ctrl + knoflík už jas obrazovky nemění': 'Ctrl + knob no longer changes the screen brightness',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena (je připojená kabelem v režimu USB?)':
         'Odyssey keyboard not found (is it connected by cable with the switch in USB mode?)',
