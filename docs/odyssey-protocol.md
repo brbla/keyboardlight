@@ -153,7 +153,13 @@ event packer 0x4472b0, key-assignment builder 0x4105d0) and verified on the devi
 Commands used by the vendor app: 01 02 03 05 06 07 09 0b **15** 17 1a 1b 1c aa.
 `0x15` = write macro block (0x38-byte chunks from offset 0). The app never reads macros back
 (macros live in the app profile); a read command is unknown (0x14 untested on purpose).
-`0x17` = write "ShootData" (mouse fire key), `0x1a`/`0x1b` = write/read a 0x80 B table (unknown).
+`0x17` = write "ShootData" (mouse fire key), `0x1a`/`0x1b` = write/read a 0x80 B table (0x1b reads an identity
+table 0x00–0x59 + 16 bytes; meaning unknown).
+`0xaa` = status ping sent before writes; reply data[0] = `ff` when the keyboard is reachable (verified over 2.4G).
+
+**Battery:** not reported over the cable or the 2.4 GHz receiver – no byte in info (0x03), config (0x05), table 0x1b
+or the 0xaa reply matches the BLE battery level, the receiver sends no unsolicited status reports, and the vendor app
+has no battery feature. Only Bluetooth LE reports it (Battery Service).
 
 Macro block:
 ```
