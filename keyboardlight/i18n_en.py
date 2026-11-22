@@ -330,6 +330,13 @@ EN = {
         'On first connection the app saves the keyboard\'s original settings. “Restore from backup” writes back the '
         'lighting, key colours, switch settings (actuation, rapid trigger) and SOCD.',
 
+    'přes Bluetooth': 'over Bluetooth',
+    'nepřipojeno': 'not connected',
+    '{name} připojena – nastavení načteno': '{name} connected – settings loaded',
+    '{name} připojena – přepnuto na ni': '{name} connected – switched to it',
+    '{name} odpojena': '{name} disconnected',
+    'Připojena i {name} – přepnete vlevo nahoře': '{name} is connected too – switch at the top left',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

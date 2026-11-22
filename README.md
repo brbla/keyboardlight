@@ -23,6 +23,7 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 | **Knob** | the knob always changes volume (fixed in firmware); one click under *More* makes **Ctrl + knob** change the screen brightness (KDE Plasma) |
 | **AULA WIN68 HE** | lighting effects, per-key colours, per-key actuation point and rapid trigger (sensitivity), SOCD pairs, automatic backup of the original settings and one-click restore |
 | **Battery** | battery level shown in the app while the keyboard is connected over Bluetooth (BLE Battery Service) |
+| **Auto-detect** | detects which keyboard is connected (cable, 2.4 GHz receiver, Bluetooth) at start and while running, and switches to the right settings |
 | **Languages** | English and Czech (follows the system language, switchable under *More*) |
 | **Safety** | every write is verified by reading it back; each area is backed up before the first write (`~/.local/share/keyboardlight/backups/`) |
 

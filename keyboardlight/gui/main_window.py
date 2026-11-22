@@ -24,6 +24,7 @@ from keyboardlight.gui.macro_page import MacroPage
 from keyboardlight.gui.aula_page import AulaPage
 from keyboardlight.gui.widgets import nav_only
 from keyboardlight.devices import aula as aula_dev
+from keyboardlight.devices import detect
 from keyboardlight.i18n import _
 
 STYLE = """
@@ -156,11 +157,15 @@ class MainWindow(QMainWindow):
         self.device_cb.currentIndexChanged.connect(lambda _i: self._set_device(self.device_cb.currentData()))
 
         self.connect_device()
-        # start with whichever supported keyboard is connected (Odyssey preferred)
-        if self.dev is None and aula_dev.find_hidraw():
+        # start with whichever supported keyboard is connected (Odyssey preferred), then watch hot-plugging
+        self._present = detect.connected()
+        self._update_device_list()
+        if 'odyssey' not in self._present and 'aula' in self._present:
             self.device_cb.setCurrentIndex(1)
         else:
             self._set_device('odyssey')
+        self._hotplug_timer = QTimer(self, interval=2000, timeout=self._check_hotplug)
+        self._hotplug_timer.start()
 
     # ================================================================ device
     def connect_device(self):
@@ -302,6 +307,42 @@ class MainWindow(QMainWindow):
             return False
 
     # ================================================================ pages
+    _HOW = {'usb': 'kabelem (USB)', '2.4g': 'bezdrátově (2,4 GHz)', 'bt': 'přes Bluetooth'}
+
+    def _update_device_list(self):
+        model = self.device_cb.model()
+        for i in range(self.device_cb.count()):
+            kind = self.device_cb.itemData(i)
+            name = 'Yenkee Odyssey' if kind == 'odyssey' else 'AULA WIN68 HE'
+            how = self._present.get(kind)
+            self.device_cb.setItemText(i, f'{name}  ●' if how else f'{name}  ○')
+            self.device_cb.setItemData(i, _(self._HOW[how]) if how else _('nepřipojeno'), Qt.ItemDataRole.ToolTipRole)
+            item = model.item(i)
+            if item is not None:
+                item.setEnabled(bool(how) or kind == self.device_cb.currentData())
+
+    def _check_hotplug(self):
+        now = detect.connected()
+        if now == self._present:
+            return
+        before, self._present = self._present, now
+        self._update_device_list()
+        cur = self.device_cb.currentData()
+        other = 'aula' if cur == 'odyssey' else 'odyssey'
+        names = {'odyssey': 'Yenkee Odyssey', 'aula': 'AULA WIN68 HE'}
+        if cur in now and before.get(cur) != now.get(cur):
+            self._set_device(cur)                       # current keyboard re-plugged / changed connection
+            self.statusBar().showMessage(_('{name} připojena – nastavení načteno').format(name=names[cur]), 5000)
+        elif cur not in now and other in now:
+            self.device_cb.setCurrentIndex(self.device_cb.findData(other))   # switch to the one that is there
+            self.statusBar().showMessage(_('{name} připojena – přepnuto na ni').format(name=names[other]), 5000)
+        elif cur not in now:
+            self._set_device(cur)                       # shows “not connected”
+            self.statusBar().showMessage(_('{name} odpojena').format(name=names[cur]), 5000)
+        elif other in now and other not in before:
+            self.statusBar().showMessage(_('Připojena i {name} – přepnete vlevo nahoře').format(name=names[other]),
+                                         8000)
+
     def _set_device(self, kind: str):
         aula = kind == 'aula'
         for i in (0, 1, 2):
@@ -310,8 +351,12 @@ class MainWindow(QMainWindow):
         for w in (self.profiles_title, self.profile_cb, self.profile_load_btn, self.profile_save_btn,
                   self.profile_del_btn, self.battery_label):
             w.setVisible(not aula)
+        if hasattr(self, '_present'):
+            self._update_device_list()
         if aula:
             ok = self.aula_page.connect_device()
+            if ok:
+                self.statusBar().showMessage(_('Připojeno – nastavení načteno z klávesnice'), 4000)
             self.dev_label.setText('AULA WIN68 HE\n' + (_('kabelem (USB)') if ok else _('– nepřipojeno –')))
             self.nav.button(4).setChecked(True)
             self._switch_page(4)
