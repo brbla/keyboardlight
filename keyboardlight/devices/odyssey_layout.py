@@ -67,6 +67,11 @@ EFFECT_OFF = 20
 NO_SPEED = {6, 17, 18, EFFECT_CUSTOM, EFFECT_OFF}   # static, or speed has no visible effect (webcam-verified, 30 fps)
 FIXED_COLORS = {4, 11, 12, 17, 18}                # own colours; colour + rainbow ignored (webcam-verified)
 WITH_DIRECTION = {1, 2, 3, 12, 18}             # webcam-verified; labels for direction 00 / ff:
+EDGE_MODES = [  # config byte 0x1B – edge strip around the case (webcam-verified 2026-11-22)
+    (0, _('Duha plynule dokola (tovární)')), (1, _('Jedna barva, pomalu se mění')), (2, _('Pulzování')),
+    (3, _('Statický barevný přechod')), (4, _('Duha běží symetricky nahoru a dolů')), (5, _('Duha rotuje dokola')),
+    (6, _('Vypnuto')),
+]
 DIRECTION_LABELS = {
     12: (_('Shora dolů'), _('Zdola nahoru')),
     18: (_('Ze středu ven'), _('Do středu')),

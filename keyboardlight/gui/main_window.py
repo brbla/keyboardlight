@@ -19,7 +19,7 @@ from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFE
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
 from keyboardlight import aula_profiles, battery, firmware, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
-from keyboardlight.devices.odyssey_layout import (DIRECTION_LABELS, EFFECT_OFF, FIXED_COLORS, NO_SPEED,
+from keyboardlight.devices.odyssey_layout import (DIRECTION_LABELS, EDGE_MODES, EFFECT_OFF, FIXED_COLORS, NO_SPEED,
                                                   WITH_DIRECTION, macro_entry)
 from keyboardlight.devices.odyssey_macros import MODES
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
@@ -184,6 +184,7 @@ class MainWindow(QMainWindow):
             block = self.dev.read_config_block()
             self.light = Lighting.from_block(block)
             self._mac_mode = Odyssey.mac_mode_from_block(block)
+            self._edge_mode = Odyssey.edge_mode_from_block(block)
             self.key_colors = self.dev.read_key_colors()
             self.keymap_default, self.keymap = self.dev.read_keymaps()
             info = self.dev.info()
@@ -208,6 +209,7 @@ class MainWindow(QMainWindow):
         self._set_enabled(True)
         self._load_lighting_ui()
         self._load_mode_ui(self._mac_mode)
+        self._load_edge_ui(self._edge_mode)
         self._refresh_keyboard()
         self.statusBar().showMessage(_('Připojeno – nastavení načteno z klávesnice'), 4000)
         self._update_battery()
@@ -228,6 +230,12 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(_('Na klávesnici přepnuto: {effect}').format(
                 effect=self.mode_cb.currentText()), 4000)
         self._mac_mode = mac
+        edge = Odyssey.edge_mode_from_block(block)
+        if edge != getattr(self, '_edge_mode', edge):
+            self._load_edge_ui(edge)
+            self.statusBar().showMessage(_('Na klávesnici přepnuto: {effect}').format(
+                effect=_('lem') + ' – ' + self.edge_cb.currentText()), 4000)
+        self._edge_mode = edge
         if now == self.light or self._write_timer.isActive():
             return
         changed_effect = now.effect != self.light.effect
@@ -383,6 +391,18 @@ class MainWindow(QMainWindow):
             del self.profiles[i]
             profiles.save_all(self.profiles)
             self._refresh_profiles()
+
+    def _load_edge_ui(self, mode: int):
+        self.edge_cb.blockSignals(True)
+        i = self.edge_cb.findData(mode)
+        self.edge_cb.setCurrentIndex(i if i >= 0 else self.edge_cb.count() - 1)
+        self.edge_cb.blockSignals(False)
+
+    def _edge_changed(self):
+        mode = self.edge_cb.currentData()
+        if self._guard(self.dev.write_edge_mode, mode) if self.dev else False:
+            self._edge_mode = mode
+            self.statusBar().showMessage(_('Lem klávesnice: {mode}').format(mode=self.edge_cb.currentText()), 3000)
 
     def _load_mode_ui(self, mac: bool):
         self.mode_cb.blockSignals(True)
@@ -646,6 +666,15 @@ class MainWindow(QMainWindow):
         self.animate.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.animate.toggled.connect(self._refresh_keyboard)
         g.addWidget(self.animate, 8, 0, 1, 3)
+        edge_row = QHBoxLayout()
+        edge_row.addWidget(QLabel(_('Lem klávesnice (spodní podsvícení):')))
+        self.edge_cb = nav_only(QComboBox())
+        for v, name in EDGE_MODES:
+            self.edge_cb.addItem(name, v)
+        self.edge_cb.currentIndexChanged.connect(self._edge_changed)
+        edge_row.addWidget(self.edge_cb)
+        edge_row.addStretch()
+        g.addLayout(edge_row, 9, 0, 1, 3)
         self._anim_t0 = time.monotonic()
         self._presses: list[tuple[int, float]] = []
         self._last_real_press = 0.0
@@ -671,7 +700,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(9, 1)
+        g.setRowStretch(10, 1)
         return w
 
     def _load_lighting_ui(self):

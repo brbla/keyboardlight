@@ -392,6 +392,17 @@ EN = {
     'Makra v klávesnici (počet: {n}) se liší od maker v aplikaci. Nahradit jimi makra v aplikaci? (Klávesnice si nepamatuje názvy maker.)': "The keyboard holds {n} macros that differ from the macros in the app. Replace the app's macros with them? (The keyboard does not store macro names.)",
     'Makra načtena z klávesnice: {n}': 'Macros read from the keyboard: {n}',
 
+    'Lem klávesnice (spodní podsvícení):': 'Keyboard edge (underglow):',
+    'Duha plynule dokola (tovární)': 'Rainbow flowing around (factory)',
+    'Jedna barva, pomalu se mění': 'One colour, slowly changing',
+    'Pulzování': 'Pulsing',
+    'Statický barevný přechod': 'Static colour gradient',
+    'Duha běží symetricky nahoru a dolů': 'Rainbow running symmetrically up and down',
+    'Duha rotuje dokola': 'Rainbow rotating around',
+    'lem': 'edge',
+    'Lem klávesnice: {mode}': 'Keyboard edge: {mode}',
+    'ověření nastavení klávesnice selhalo': 'verifying the keyboard setting failed',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

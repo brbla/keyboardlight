@@ -201,14 +201,29 @@ class Odyssey:
         return self.mac_mode_from_block(self.read_config_block())
 
     def write_mac_mode(self, mac: bool) -> None:
+        self._write_config_byte(self.MODE_OFFSET, 0xFF if mac else 0x00)
+
+    # ---- edge light strip around the case (separate zone) ---------------------
+    EDGE_OFFSET = 0x1B          # 00-05 effects, 06 = off (webcam + user verified); 0x1C / 0x1D: no visible effect
+    EDGE_OFF = 0x06
+
+    @staticmethod
+    def edge_mode_from_block(block: bytes) -> int:
+        v = block[Odyssey.EDGE_OFFSET]
+        return v if v <= 5 else Odyssey.EDGE_OFF
+
+    def write_edge_mode(self, mode: int) -> None:
+        self._write_config_byte(self.EDGE_OFFSET, mode)
+
+    def _write_config_byte(self, offset: int, value: int) -> None:
         with self.session():
             block = bytearray(self._read(CMD_CFG_READ, CFG_BLOCK))
             self._backup('config', bytes(block))
-            block[self.MODE_OFFSET] = 0xFF if mac else 0x00
+            block[offset] = value
             # write at offset 0 erases the flash block -> always rewrite the whole block
             self._write(CMD_CFG_WRITE, bytes(block))
             if self._read(CMD_CFG_READ, CFG_BLOCK) != bytes(block):
-                raise OdysseyError(_('ověření režimu kláves selhalo'))
+                raise OdysseyError(_('ověření nastavení klávesnice selhalo'))
 
     # ---- per-key colours (effect 19) -------------------------------------
     def read_key_colors(self) -> list[tuple[int, int, int]]:
