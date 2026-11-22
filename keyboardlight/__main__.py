@@ -3,6 +3,28 @@ import sys
 from keyboardlight.i18n import _
 
 
+def _missing_dependency(module: str, package: str) -> None:
+    """Tell the user (terminal + desktop dialog) how to finish an incomplete installation."""
+    import shutil
+    import subprocess
+    msg = _('KeyBoardLight nejde spustit – chybí knihovna {module}.\n\n'
+            'Instalace se nejspíš nedokončila (např. selhalo stažení závislostí).\n'
+            'Dokončete ji v terminálu příkazem:\n\n'
+            '    sudo pacman -Syu {package}\n\n'
+            'Když stahování selže, obnovte zrcadla: sudo cachyos-rate-mirrors (CachyOS)\n'
+            'nebo sudo pacman -Syyu, a pak příkaz zopakujte.').format(module=module, package=package)
+    print(msg, file=sys.stderr)
+    for cmd in (['kdialog', '--title', 'KeyBoardLight', '--error', msg],
+                ['zenity', '--error', '--title=KeyBoardLight', '--text', msg],
+                ['notify-send', '-u', 'critical', 'KeyBoardLight', msg]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.run(cmd, timeout=600)
+            except (OSError, subprocess.SubprocessError):
+                continue
+            break
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog='keyboardlight', description=_('Nastavení klávesnice Yenkee Odyssey'))
     ap.add_argument('--profile', metavar=_('NÁZEV'), help=_('načte uložený profil do klávesnice a skončí (bez okna)'))
@@ -33,8 +55,12 @@ def main() -> int:
         return 0
 
     import os
-    from PyQt6.QtGui import QIcon
-    from PyQt6.QtWidgets import QApplication
+    try:
+        from PyQt6.QtGui import QIcon
+        from PyQt6.QtWidgets import QApplication
+    except ImportError:
+        _missing_dependency('PyQt6', 'python-pyqt6')
+        return 1
     from keyboardlight.gui.main_window import MainWindow
     app = QApplication(sys.argv)
     app.setApplicationName('KeyBoardLight')

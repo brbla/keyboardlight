@@ -236,6 +236,14 @@ EN = {
 
     '{effect}, jas {b}': '{effect}, brightness {b}',
 
+    'KeyBoardLight nejde spustit – chybí knihovna {module}.\n\nInstalace se nejspíš nedokončila (např. selhalo stažení závislostí).\nDokončete ji v terminálu příkazem:\n\n    sudo pacman -Syu {package}\n\nKdyž stahování selže, obnovte zrcadla: sudo cachyos-rate-mirrors (CachyOS)\nnebo sudo pacman -Syyu, a pak příkaz zopakujte.':
+        'KeyBoardLight cannot start – the {module} library is missing.\n\n'
+        'The installation probably did not finish (e.g. downloading the dependencies failed).\n'
+        'Finish it in a terminal with:\n\n'
+        '    sudo pacman -Syu {package}\n\n'
+        'If downloading fails, refresh the mirrors: sudo cachyos-rate-mirrors (CachyOS)\n'
+        'or sudo pacman -Syyu, then run the command again.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

@@ -31,10 +31,19 @@ keyboard, so it keeps working over Bluetooth too.
 
 ## Install
 
+### CachyOS / Arch Linux – installer (recommended)
+Download **`install.sh`** from **[Releases](https://github.com/brbla/keyboardlight/releases/latest)** and run it:
+```sh
+sh install.sh
+```
+It updates the system, installs the dependencies (PyQt6), downloads the latest package and installs it. If anything
+fails (e.g. *failed to download* because of outdated mirrors) it tells you exactly what to do.
+
 ### CachyOS / Arch Linux – ready-made package
 Download the latest `keyboardlight-*-any.pkg.tar.zst` from
 **[Releases](https://github.com/brbla/keyboardlight/releases/latest)** and install it:
 ```sh
+sudo pacman -Syu                                   # update first – avoids "failed to download" of dependencies
 sudo pacman -U keyboardlight-*-any.pkg.tar.zst
 ```
 
@@ -111,12 +120,16 @@ Roadmap: [docs/PLAN.md](docs/PLAN.md).
 - **Baterie:** když je klávesnice připojená přes Bluetooth, aplikace ukazuje stav baterie.
 - **Knoflík:** otáčení mění vždy hlasitost (dáno firmwarem); jedním tlačítkem na stránce *Další* nastavíte, že **Ctrl + knoflík** mění jas obrazovky (KDE Plasma).
 
-**Instalace na CachyOS / Arch – hotový balíček**
-Stáhněte nejnovější `keyboardlight-*-any.pkg.tar.zst` z
-**[Releases](https://github.com/brbla/keyboardlight/releases/latest)** a nainstalujte:
+**Instalace na CachyOS / Arch – instalátor (doporučeno)**
+Stáhněte **`install.sh`** z **[Releases](https://github.com/brbla/keyboardlight/releases/latest)** a spusťte:
 ```sh
-sudo pacman -U keyboardlight-*-any.pkg.tar.zst
+sh install.sh
 ```
+Aktualizuje systém, doinstaluje závislosti (PyQt6), stáhne nejnovější balíček a nainstaluje ho. Když něco selže
+(např. *failed to download* kvůli zastaralým zrcadlům), napíše přesně, co udělat.
+
+**Hotový balíček ručně:** stáhněte `keyboardlight-*-any.pkg.tar.zst` z Releases a spusťte
+`sudo pacman -Syu` (aktualizace – předejde chybě „failed to download“) a pak `sudo pacman -U keyboardlight-*-any.pkg.tar.zst`.
 Nebo ze zdrojů: `git clone https://github.com/brbla/keyboardlight.git && cd keyboardlight/packaging/arch && makepkg -si`
 Pak klávesnici odpojte a znovu připojte a spusťte **KeyBoardLight** z nabídky aplikací.
 Klávesnici připojte **kabelem** (přepínač vespod na **TYP-C**) **nebo přes USB přijímač 2,4 GHz** (přepínač na **2.4G**).
