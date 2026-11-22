@@ -16,7 +16,9 @@ from dataclasses import dataclass
 from keyboardlight.i18n import _
 
 VID, PID = 0x320F, 0x5055
-CHUNK = 0x38
+PID_DONGLE = 0x5088          # 2.4 GHz USB receiver: relays only 32-byte packets (8 B header + 24 B data)
+CHUNK = 0x38                 # data bytes per frame over the USB cable
+CHUNK_DONGLE = 0x18
 
 CMD_BEGIN, CMD_END = 0x01, 0x02
 CMD_INFO = 0x03
@@ -52,18 +54,28 @@ def frame(cmd: int, length: int = 0, offset: int = 0, data: bytes = b'') -> byte
 
 
 def find_hidraw() -> str | None:
-    """hidraw node of the config interface (descriptor contains usage page 0xFF1C)."""
-    want = f'HID_ID=0003:{VID:08X}:{PID:08X}'
+    """hidraw node of the config interface (usage page 0xFF1C); USB cable preferred over the 2.4 GHz receiver."""
+    found = {}
     for p in sorted(glob.glob('/sys/class/hidraw/hidraw*')):
         dev = os.path.realpath(p + '/device')
         try:
-            if want not in open(dev + '/uevent').read():
+            ue = open(dev + '/uevent').read()
+            if b'\x06\x1c\xff' not in open(dev + '/report_descriptor', 'rb').read():
                 continue
-            if b'\x06\x1c\xff' in open(dev + '/report_descriptor', 'rb').read():
-                return '/dev/' + os.path.basename(p)
         except OSError:
             continue
-    return None
+        for pid in (PID, PID_DONGLE):
+            if f'HID_ID=0003:{VID:08X}:{pid:08X}' in ue:
+                found.setdefault(pid, '/dev/' + os.path.basename(p))
+    return found.get(PID) or found.get(PID_DONGLE)
+
+
+def is_dongle(path: str) -> bool:
+    try:
+        ue = open(os.path.realpath(f'/sys/class/hidraw/{os.path.basename(path)}/device') + '/uevent').read()
+    except OSError:
+        return False
+    return f':{PID_DONGLE:08X}' in ue
 
 
 @dataclass
@@ -95,12 +107,14 @@ class Odyssey:
     def __init__(self, path: str | None = None):
         self.path = path or find_hidraw()
         if not self.path:
-            raise OdysseyError(_('Klávesnice Odyssey nenalezena (je připojená kabelem v režimu USB?)'))
+            raise OdysseyError(_('Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).'))
         try:
             self.fd = os.open(self.path, os.O_RDWR)
         except PermissionError as e:
             raise OdysseyError(_('Nemám přístup k {path} – chybí udev pravidlo (udev/70-keyboardlight.rules)').format(path=self.path)) from e
         self._backed_up: set[str] = set()
+        self.wireless = is_dongle(self.path)
+        self.chunk = CHUNK_DONGLE if self.wireless else CHUNK
 
     def close(self) -> None:
         if self.fd is not None:
@@ -134,14 +148,14 @@ class Odyssey:
 
     def _read(self, cmd: int, size: int) -> bytes:
         out = bytearray()
-        for off in range(0, size, CHUNK):
-            n = min(CHUNK, size - off)
+        for off in range(0, size, self.chunk):
+            n = min(self.chunk, size - off)
             out += self._xfer(cmd, n, off)[8:8 + n]
         return bytes(out)
 
     def _write(self, cmd: int, data: bytes) -> None:
-        for off in range(0, len(data), CHUNK):
-            chunk = data[off:off + CHUNK]
+        for off in range(0, len(data), self.chunk):
+            chunk = data[off:off + self.chunk]
             self._xfer(cmd, len(chunk), off, chunk)
 
     def _backup(self, area: str, data: bytes) -> None:
@@ -172,8 +186,7 @@ class Odyssey:
             self._backup('config', bytes(block))
             light.apply_to(block)
             # write at offset 0 erases the flash block -> always rewrite the whole block
-            self._xfer(CMD_CFG_WRITE, CHUNK, 0, bytes(block[:CHUNK]))
-            self._xfer(CMD_CFG_WRITE, CFG_BLOCK - CHUNK, CHUNK, bytes(block[CHUNK:]))
+            self._write(CMD_CFG_WRITE, bytes(block))
             if self._read(CMD_CFG_READ, CFG_BLOCK) != bytes(block):
                 raise OdysseyError(_('ověření nastavení podsvícení selhalo'))
 

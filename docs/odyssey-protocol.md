@@ -1,7 +1,13 @@
 # Yenkee YKB 30 Odyssey – USB protocol notes
 
-Device: `320f:5055` "Telink ODYSSEY" (same OEM board as Evision Kreo Hive). Must be in **wired mode**
-(over Bluetooth only a 4-byte vendor feature report is exposed).
+Device: `320f:5055` "Telink ODYSSEY" (same OEM board as Evision Kreo Hive) over the USB cable (switch on TYP-C).
+
+**2.4 GHz receiver** `320f:5088` "Telink Wireless Gaming Keyboard" exposes the same two interfaces and the same
+config channel (report 4, page 0xFF1C), but relays only **32-byte packets**: 8 B header + **24 B (0x18) data**.
+All commands work when every frame carries at most 0x18 data bytes (longer frames are truncated → zeros on read,
+corrupted writes). Verified: info, config read/write, per-key colours, key map read/write.
+
+**Bluetooth** exposes only a 4-byte vendor feature report – no configuration possible.
 
 ## Interfaces (USB)
 

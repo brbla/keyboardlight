@@ -24,8 +24,9 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 | **Languages** | English and Czech (follows the system language, switchable under *More*) |
 | **Safety** | every write is verified by reading it back; each area is backed up before the first write (`~/.local/share/keyboardlight/backups/`) |
 
-The keyboard must be connected **by USB cable with the switch on the bottom in the wired (TYP-C) position** –
-over Bluetooth / 2.4 GHz the configuration interface is not available.
+Connect the keyboard **by USB cable** (switch on the bottom on **TYP-C**) **or through its 2.4 GHz USB receiver**
+(switch on **2.4G**). Over **Bluetooth** the keyboard cannot be configured – but everything you set is stored in the
+keyboard, so it keeps working over Bluetooth too.
 
 ## Install
 
@@ -64,7 +65,9 @@ keyboardlight --profile Night        # apply a saved profile without opening the
 
 | Keyboard | USB ID | Status |
 |---|---|---|
-| Yenkee YKB 30 Odyssey (Telink, 75 %, 82 keys) | `320f:5055` | ✅ supported |
+| Yenkee YKB 30 Odyssey (Telink, 75 %, 82 keys) – USB cable | `320f:5055` | ✅ supported |
+| Yenkee YKB 30 Odyssey – 2.4 GHz USB receiver | `320f:5088` | ✅ supported |
+| Yenkee YKB 30 Odyssey – Bluetooth | – | ❌ no configuration channel (settings stored in the keyboard still apply) |
 | Evision Kreo Hive and other boards with `320f:5055` | `320f:5055` | likely works (same OEM board), untested |
 | AULA 60HE (Hall-effect) | – | planned |
 
@@ -106,6 +109,7 @@ sudo pacman -U keyboardlight-*-any.pkg.tar.zst
 ```
 Nebo ze zdrojů: `git clone https://github.com/brbla/keyboardlight.git && cd keyboardlight/packaging/arch && makepkg -si`
 Pak klávesnici odpojte a znovu připojte a spusťte **KeyBoardLight** z nabídky aplikací.
-Klávesnice musí být připojená **kabelem** a přepínač na spodní straně musí být v poloze **TYP-C** (drátově).
+Klávesnici připojte **kabelem** (přepínač vespod na **TYP-C**) **nebo přes USB přijímač 2,4 GHz** (přepínač na **2.4G**).
+Přes **Bluetooth** nastavovat nejde, ale vše, co nastavíte, je uložené v klávesnici a funguje i přes Bluetooth.
 
 Aplikace není oficiálním produktem firmy Yenkee / FAST ČR.

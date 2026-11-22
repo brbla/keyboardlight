@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(str(e))
             self._set_enabled(False)
             return
-        self.dev_label.setText(f'Yenkee Odyssey\n{self.dev.path}')
+        self.dev_label.setText('Yenkee Odyssey\n' + (_('bezdrátově (2,4 GHz)') if self.dev.wireless else _('kabelem (USB)')))
         self.info_label.setText(_('Zařízení: {path}').format(path=self.dev.path) + f'\nInfo (0x03): {info.hex(" ")}\n'
                                 + _('Zálohy před zápisy: {dir}').format(dir=BACKUP_DIR))
         self.colors_dirty = False

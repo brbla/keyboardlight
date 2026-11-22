@@ -223,8 +223,10 @@ EN = {
     'Ctrl + knoflík už jas obrazovky nemění': 'Ctrl + knob no longer changes the screen brightness',
 
     # ---- device errors
-    'Klávesnice Odyssey nenalezena (je připojená kabelem v režimu USB?)':
-        'Odyssey keyboard not found (is it connected by cable with the switch in USB mode?)',
+    'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
+        'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
+    'bezdrátově (2,4 GHz)': 'wireless (2.4 GHz)',
+    'kabelem (USB)': 'USB cable',
     'Nemám přístup k {path} – chybí udev pravidlo (udev/70-keyboardlight.rules)':
         'No access to {path} – the udev rule is missing (udev/70-keyboardlight.rules)',
     'klávesnice neodpověděla na příkaz {cmd}': 'the keyboard did not answer command {cmd}',
