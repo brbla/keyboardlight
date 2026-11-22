@@ -7,7 +7,9 @@ config channel (report 4, page 0xFF1C), but relays only **32-byte packets**: 8 B
 All commands work when every frame carries at most 0x18 data bytes (longer frames are truncated → zeros on read,
 corrupted writes). Verified: info, config read/write, per-key colours, key map read/write.
 
-**Bluetooth** exposes only a 4-byte vendor feature report – no configuration possible.
+**Bluetooth** exposes only feature report 5 (vendor page 0xFF01, 4 B); GET_FEATURE returns `05 00 00 00 00`,
+all other report IDs fail. The vendor app never uses feature reports (no HidD_SetFeature import), so there is no
+known configuration protocol over Bluetooth – settings stored in the keyboard still apply.
 
 ## Interfaces (USB)
 
