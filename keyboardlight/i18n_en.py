@@ -234,6 +234,8 @@ EN = {
         'after switching from battery to cable: unplug the cable, move the switch to 2.4G and back to TYP-C, plug the '
         'cable in again.',
 
+    '{effect}, jas {b}': '{effect}, brightness {b}',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

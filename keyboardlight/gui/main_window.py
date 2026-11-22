@@ -180,12 +180,12 @@ class MainWindow(QMainWindow):
 
     # ================================================================ profiles
     def _refresh_profiles(self, select: str | None = None):
-        cur = select or self.profile_cb.currentText()
+        cur = select or self.profile_cb.currentData()
         self.profile_cb.clear()
         for p in self.profiles:
-            self.profile_cb.addItem(p.name)
+            self.profile_cb.addItem(f'{p.name} – {p.effect_label()}', p.name)
             self.profile_cb.setItemData(self.profile_cb.count() - 1, p.summary(), Qt.ItemDataRole.ToolTipRole)
-        i = self.profile_cb.findText(cur)
+        i = self.profile_cb.findData(cur)
         if i >= 0:
             self.profile_cb.setCurrentIndex(i)
 
@@ -196,10 +196,13 @@ class MainWindow(QMainWindow):
         dlg.setWindowTitle(_('Uložit profil'))
         v = QVBoxLayout(dlg)
         v.addWidget(QLabel(_('Název profilu (např. Den, Noc, Hry):')))
-        name = QLineEdit(self.profile_cb.currentText() or _('Den'))
+        name = QLineEdit(self.profile_cb.currentData() or _('Den'))
         v.addWidget(name)
         v.addWidget(QLabel(_('Uložit kromě podsvícení také:')))
         c_colors = QCheckBox(_('barvy jednotlivých kláves'), checked=True)
+        # per-key colours only matter for the custom-colours effect
+        c_colors.setVisible(self.light.effect == EFFECT_CUSTOM)
+        c_colors.setChecked(self.light.effect == EFFECT_CUSTOM)
         c_keys = QCheckBox(_('mapu kláves a makra'), checked=False)
         v.addWidget(c_colors)
         v.addWidget(c_keys)

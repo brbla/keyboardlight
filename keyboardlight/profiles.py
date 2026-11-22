@@ -25,6 +25,12 @@ class Profile:
     keymap: list | None = None            # 128 x hex string (3 bytes)
     macros: list | None = None            # [{'name':…, 'events':[…]}], stored together with keymap
 
+    def effect_label(self) -> str:
+        from keyboardlight.devices.odyssey_layout import EFFECTS
+        names = {v: n for v, n, _note in EFFECTS}
+        eff = self.lighting.get('effect')
+        return _('{effect}, jas {b}').format(effect=names.get(eff, str(eff)), b=self.lighting.get('brightness'))
+
     def summary(self) -> str:
         parts = [_('podsvícení')]
         if self.key_colors is not None:
