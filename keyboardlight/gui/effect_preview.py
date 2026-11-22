@@ -72,16 +72,10 @@ def frame(light, t: float, presses: list[tuple[int, float]]) -> dict[int, QColor
             pos = (x if row % 2 == 0 else W - x) + row * W
             ph = pos / (W * 2) - sgn * t * v * 0.4
             c = col(ph, 0.35 + 0.65 * (0.5 + 0.5 * math.sin(2 * math.pi * ph * 3)))
-        elif eff == 11:                                         # flowers: colourful spots blooming
-            n = int(t * v * 0.8)
-            val = 0.0
-            for i in range(n - 3, n + 1):
-                fx, fy = _hash(i * 7 + 1) * W, _hash(i * 7 + 2) * H
-                age = t * v * 0.8 - i
-                if 0 <= age < 4:
-                    d = math.hypot(x - fx, (y - fy) * 1.3)
-                    val = max(val, max(0.0, 1 - abs(d - age * 1.5) / 1.5) * (1 - age / 4))
-            c = _rgb(x / W + t * 0.1, 0.3 + 0.7 * val)
+        elif eff == 11:                                         # flowers: every key lit, own colour drifting
+            h = _hash(k.slot) + t * v * 0.12 * (0.6 + 0.8 * _hash(k.slot + 77))
+            h += 0.08 * math.sin(t * v * (0.8 + _hash(k.slot + 5)) * 2 * math.pi / 3)
+            c = _rgb(h)
         elif eff == 10:                                         # stars: random twinkles
             per = 1.5 + 2 * _hash(k.slot)
             ph = (t * v + _hash(k.slot + 999) * per) % per / per

@@ -657,6 +657,8 @@ class MainWindow(QMainWindow):
         self.stuck_hint = QLabel(_('Efekt nedělá, co má (např. zůstává tmavý)? Klávesnici odpojte a znovu připojte – '
                                    'kabel vytáhněte a zasuňte, u přijímače přepněte přepínač na OFF a zpět. '
                                    'Nastavení zůstane uložené.'), objectName='hint', wordWrap=True)
+        self.stuck_hint.setText(self.stuck_hint.text() + '\n' + _('Tip: Fn + mezerník na chvíli rozsvítí všechny klávesy '
+                                                                 '(i po zhasnutí přes Fn + Del) – efekt se vrátí s prvním stiskem.'))
         g.addWidget(self.stuck_hint, 6, 0, 1, 3)
         self.show_all = QCheckBox(_('Zobrazit všechny volby (i ty, které u tohoto efektu podle testu nic nedělají)'))
         self.show_all.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -673,6 +675,7 @@ class MainWindow(QMainWindow):
             self.edge_cb.addItem(name, v)
         self.edge_cb.currentIndexChanged.connect(self._edge_changed)
         edge_row.addWidget(self.edge_cb)
+        edge_row.addWidget(QLabel(_('na klávesnici: Fn + pravý Ctrl'), objectName='hint'))
         edge_row.addStretch()
         g.addLayout(edge_row, 9, 0, 1, 3)
         self._anim_t0 = time.monotonic()
