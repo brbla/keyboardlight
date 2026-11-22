@@ -20,6 +20,7 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 | **Keys** | remap any key to another key (with Ctrl/Shift/Alt/Win), a multimedia function, a macro, or disable it |
 | **Macros** | record from the keyboard, type text (aware of your system keyboard layout via libxkbcommon), mouse clicks, delays; play once / while held / toggle / N times |
 | **Profiles** | save named presets (e.g. *Day*, *Night*) and switch with one click or `keyboardlight --profile Night` (bind it to a hotkey or a timer) |
+| **Knob** | the knob always changes volume (fixed in firmware); one click under *More* makes **Ctrl + knob** change the screen brightness (KDE Plasma) |
 | **Languages** | English and Czech (follows the system language, switchable under *More*) |
 | **Safety** | every write is verified by reading it back; each area is backed up before the first write (`~/.local/share/keyboardlight/backups/`) |
 
@@ -28,7 +29,14 @@ over Bluetooth / 2.4 GHz the configuration interface is not available.
 
 ## Install
 
-### CachyOS / Arch Linux
+### CachyOS / Arch Linux – ready-made package
+Download the latest `keyboardlight-*-any.pkg.tar.zst` from
+**[Releases](https://github.com/brbla/keyboardlight/releases/latest)** and install it:
+```sh
+sudo pacman -U keyboardlight-*-any.pkg.tar.zst
+```
+
+### CachyOS / Arch Linux – build from source
 ```sh
 git clone https://github.com/brbla/keyboardlight.git
 cd keyboardlight/packaging/arch
@@ -88,12 +96,15 @@ Roadmap: [docs/PLAN.md](docs/PLAN.md).
 - **Makra:** nahrávání z klávesnice, vložení textu (podle rozložení klávesnice v systému, např. česká QWERTZ), kliknutí myší, prodlevy; přehrát jednou / při držení / přepínač / N-krát.
 - **Profily:** uložené předvolby (např. *Den*, *Noc*) a přepínání jedním kliknutím nebo příkazem `keyboardlight --profile Noc`.
 
-**Instalace na CachyOS / Arch**
+- **Knoflík:** otáčení mění vždy hlasitost (dáno firmwarem); jedním tlačítkem na stránce *Další* nastavíte, že **Ctrl + knoflík** mění jas obrazovky (KDE Plasma).
+
+**Instalace na CachyOS / Arch – hotový balíček**
+Stáhněte nejnovější `keyboardlight-*-any.pkg.tar.zst` z
+**[Releases](https://github.com/brbla/keyboardlight/releases/latest)** a nainstalujte:
 ```sh
-git clone https://github.com/brbla/keyboardlight.git
-cd keyboardlight/packaging/arch
-makepkg -si
+sudo pacman -U keyboardlight-*-any.pkg.tar.zst
 ```
+Nebo ze zdrojů: `git clone https://github.com/brbla/keyboardlight.git && cd keyboardlight/packaging/arch && makepkg -si`
 Pak klávesnici odpojte a znovu připojte a spusťte **KeyBoardLight** z nabídky aplikací.
 Klávesnice musí být připojená **kabelem** a přepínač na spodní straně musí být v poloze **TYP-C** (drátově).
 
