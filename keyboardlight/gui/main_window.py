@@ -263,8 +263,10 @@ class MainWindow(QMainWindow):
             self._refresh_profiles()
 
     def _set_enabled(self, on: bool):
-        for i in (0, 1, 3):
+        for i in (0, 1):
             self.pages.widget(i).setEnabled(on)
+        # the "More" page stays usable (language, knob shortcut); only device actions depend on the keyboard
+        self.factory_colors_btn.setEnabled(on)
 
     def _guard(self, fn, *a):
         if not self.dev:
@@ -853,7 +855,7 @@ class MainWindow(QMainWindow):
         self.info_label = QLabel('', objectName='hint', wordWrap=True)
         self.info_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         v.addWidget(self.info_label)
-        b = QPushButton(_('Tovární barvy kláves (WASD + šipky bíle)'))
+        b = self.factory_colors_btn = QPushButton(_('Tovární barvy kláves (WASD + šipky bíle)'))
         b.clicked.connect(self._factory_colors)
         v.addWidget(b, alignment=Qt.AlignmentFlag.AlignLeft)
         self.knob_btn = QPushButton()
