@@ -408,6 +408,10 @@ EN = {
     'Tip: Fn + mezerník na chvíli rozsvítí všechny klávesy (i po zhasnutí přes Fn + Del) – efekt se vrátí s prvním stiskem.':
         'Tip: Fn + Space lights up all keys for a moment (even after Fn + Del) – the effect returns with the next key press.',
 
+    'Demo – klávesnice není připojená: efekty si můžete vyzkoušet, nic se nezapisuje.': 'Demo – keyboard not connected: try the effects here, nothing is written.',
+
+    'Yenkee Odyssey\ndemo – nepřipojeno': 'Yenkee Odyssey\ndemo – not connected',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

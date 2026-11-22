@@ -17,7 +17,8 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 |---|---|
 | **Lighting** | all 20 hardware effects, brightness, speed, direction, colour, rainbow – only the controls that apply to the chosen effect are shown |
 | **Per-key colours** | click/drag to paint keys, any RGB colour, per-key brightness 0–100 % (selected keys or the whole keyboard) |
-| **Edge light** | the underglow strip around the case: 6 effects or off |
+| **Edge light** | the underglow strip around the case: 6 effects or off, shown in the preview |
+| **Demo mode** | without a connected keyboard the lighting page still works as an animated preview (nothing is written) |
 | **Key mode** | Windows/Linux or Mac (Alt and Win swapped) – same as Fn+A / Fn+S, shown live |
 | **Keys** | remap any key to another key (with Ctrl/Shift/Alt/Win), a multimedia function, a macro, or disable it |
 | **Macros** | record from the keyboard, type text (aware of your system keyboard layout via libxkbcommon), mouse clicks, delays; play once / while held / toggle / N times; read the macros back from the keyboard |

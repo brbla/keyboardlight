@@ -200,8 +200,11 @@ class MainWindow(QMainWindow):
                                                'nebo přes USB přijímač (přepínač 2.4G). Uložené nastavení platí dál.'))
             else:
                 self.statusBar().showMessage(str(e))
+            self._enter_demo()
             self._update_battery()
             return
+        self.demo = False
+        self.demo_label.setVisible(False)
         self.dev_label.setText('Yenkee Odyssey\n' + (_('bezdrátově (2,4 GHz)') if self.dev.wireless else _('kabelem (USB)')))
         self.info_label.setText(_('Zařízení: {path}').format(path=self.dev.path) + f'\nInfo (0x03): {info.hex(" ")}\n'
                                 + _('Zálohy před zápisy: {dir}').format(dir=BACKUP_DIR))
@@ -247,6 +250,28 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(_('Na klávesnici přepnuto: {effect}').format(effect=name), 4000)
         else:
             self.statusBar().showMessage(_('Nastavení změněno na klávesnici – načteno'), 3000)
+
+    def _enter_demo(self):
+        """No keyboard to talk to: keep the lighting page usable as a preview (nothing is written anywhere)."""
+        self.demo = True
+        if battery.bluetooth_battery() is None:
+            self.dev_label.setText(_('Yenkee Odyssey\ndemo – nepřipojeno'))
+        if not self.light:
+            self.light = Lighting(effect=1, brightness=4, speed=2, direction=0, rainbow=True, color=(255, 0, 0))
+        if getattr(self, '_edge_mode', None) is None:
+            self._edge_mode = 0
+        if not any(any(c) for c in self.key_colors):
+            factory = {'W', 'A', 'S', 'D', '↑', '↓', '←', '→'}
+            self.key_colors = [(0, 0, 0)] * len(self.key_colors)
+            for k in KEYS:
+                if k.label in factory and k.slot < len(self.key_colors):
+                    self.key_colors[k.slot] = (255, 255, 255)
+        self.colors_dirty = False
+        self.pages.widget(0).setEnabled(True)
+        self.demo_label.setVisible(True)
+        self._load_lighting_ui()
+        self._load_edge_ui(self._edge_mode)
+        self._refresh_keyboard()
 
     def _update_battery(self):
         pct = battery.bluetooth_battery()
@@ -400,8 +425,13 @@ class MainWindow(QMainWindow):
 
     def _edge_changed(self):
         mode = self.edge_cb.currentData()
+        if getattr(self, 'demo', False):
+            self._edge_mode = mode
+            self._refresh_keyboard()
+            return
         if self._guard(self.dev.write_edge_mode, mode) if self.dev else False:
             self._edge_mode = mode
+            self._refresh_keyboard()
             self.statusBar().showMessage(_('Lem klávesnice: {mode}').format(mode=self.edge_cb.currentText()), 3000)
 
     def _load_mode_ui(self, mac: bool):
@@ -513,19 +543,23 @@ class MainWindow(QMainWindow):
 
     def _animating(self) -> bool:
         return (hasattr(self, 'animate') and self.animate.isChecked() and self.pages.currentIndex() == 0
-                and bool(self.light) and self.light.effect != EFFECT_CUSTOM and not self._aula_mode())
+                and bool(self.light) and not self._aula_mode())
 
     def _anim_tick(self):
         if not self._animating():
             self._anim_timer.stop()
             return
-        from keyboardlight.gui.effect_preview import REACTIVE, frame
+        from keyboardlight.gui.effect_preview import REACTIVE, edge_frame, frame
         t = time.monotonic() - self._anim_t0
         if self.light.effect in REACTIVE and time.monotonic() - self._last_real_press > 2.5:
             if not self._presses or t - self._presses[-1][1] > 0.9:     # demo presses when nobody types
                 self._presses.append((random.choice(KEYS).slot, t))
         self._presses = [p for p in self._presses if t - p[1] < 6][-20:]
-        self.kbd.colors = frame(self.light, t, self._presses)
+        if self.light.effect == EFFECT_CUSTOM:
+            self.kbd.colors = {k.slot: QColor(*self.key_colors[k.slot]) for k in KEYS if any(self.key_colors[k.slot])}
+        else:
+            self.kbd.colors = frame(self.light, t, self._presses)
+        self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), t, self.light.brightness)
         self.kbd.update()
 
     def eventFilter(self, obj: QObject, ev: QEvent) -> bool:
@@ -543,6 +577,10 @@ class MainWindow(QMainWindow):
     def _refresh_keyboard(self):
         page = self.pages.currentIndex()
         self.kbd.colors, self.kbd.labels, self.kbd.marked = {}, {}, set()
+        self.kbd.edge_colors = None
+        if page == 0 and self.light and hasattr(self, 'edge_cb') and not self._aula_mode():
+            from keyboardlight.gui.effect_preview import edge_frame
+            self.kbd.edge_colors = edge_frame(self.edge_cb.currentData(), 0.0, self.light.brightness)
         if self._animating():
             if not self._anim_timer.isActive():
                 self._anim_timer.start()
@@ -657,6 +695,11 @@ class MainWindow(QMainWindow):
         self.stuck_hint = QLabel(_('Efekt nedělá, co má (např. zůstává tmavý)? Klávesnici odpojte a znovu připojte – '
                                    'kabel vytáhněte a zasuňte, u přijímače přepněte přepínač na OFF a zpět. '
                                    'Nastavení zůstane uložené.'), objectName='hint', wordWrap=True)
+        self.demo_label = QLabel(_('Demo – klávesnice není připojená: efekty si můžete vyzkoušet, nic se nezapisuje.'),
+                                 objectName='hint', wordWrap=True)
+        self.demo_label.setStyleSheet('color: #ffd27a;')
+        self.demo_label.setVisible(False)
+        g.addWidget(self.demo_label, 10, 0, 1, 3)
         self.stuck_hint.setText(self.stuck_hint.text() + '\n' + _('Tip: Fn + mezerník na chvíli rozsvítí všechny klávesy '
                                                                  '(i po zhasnutí přes Fn + Del) – efekt se vrátí s prvním stiskem.'))
         g.addWidget(self.stuck_hint, 6, 0, 1, 3)
@@ -703,7 +746,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(10, 1)
+        g.setRowStretch(11, 1)
         return w
 
     def _load_lighting_ui(self):
@@ -881,6 +924,10 @@ class MainWindow(QMainWindow):
             self._refresh_keyboard()
 
     def _save_colors(self):
+        if getattr(self, 'demo', False):
+            self.colors_dirty = False
+            self._update_lighting_widgets()
+            return
         if self._guard(self.dev.write_key_colors, self.key_colors) if self.dev else False:
             self.colors_dirty = False
             self._update_lighting_widgets()

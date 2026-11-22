@@ -24,7 +24,8 @@ class KeyboardWidget(QWidget):
         self.height_u = height_u or HEIGHT_U
         self.setMinimumSize(640, 250)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.colors: dict[int, QColor] = {}      # slot -> fill colour (lit key); missing = unlit
+        self.colors: dict[int, QColor] = {}
+        self.edge_colors: list[QColor] | None = None   # edge strip preview around the case      # slot -> fill colour (lit key); missing = unlit
         self.labels: dict[int, str] = {}         # slot -> override label (remapped keys)
         self.marked: set[int] = set()            # slots drawn with an orange outline
         self.selected: set[int] = set()
@@ -32,8 +33,34 @@ class KeyboardWidget(QWidget):
         self._drag_add: bool | None = None
 
     # ---- geometry ----------------------------------------------------------
+    def _edge_point(self, r: QRectF, s: float) -> QPointF:
+        """Point on the rectangle's outline; s 0..1 starting at the bottom middle, clockwise on screen."""
+        w, h = r.width(), r.height()
+        d = (s % 1.0) * 2 * (w + h)
+        for length, start, step in ((w / 2, (r.center().x(), r.bottom()), (-1, 0)),
+                                    (h, (r.left(), r.bottom()), (0, -1)),
+                                    (w, (r.left(), r.top()), (1, 0)),
+                                    (h, (r.right(), r.top()), (0, 1)),
+                                    (w / 2, (r.right(), r.bottom()), (-1, 0))):
+            if d <= length:
+                return QPointF(start[0] + step[0] * d, start[1] + step[1] * d)
+            d -= length
+        return QPointF(r.center().x(), r.bottom())
+
+    def _paint_edge(self, p: QPainter, board: QRectF):
+        n = len(self.edge_colors)
+        ring = board.adjusted(-3, -3, 3, 3)
+        for width, alpha in ((22, 45), (12, 110), (5, 255)):
+            for i, c in enumerate(self.edge_colors):
+                col = QColor(c)
+                col.setAlpha(alpha)
+                pen = QPen(col, width)
+                pen.setCapStyle(Qt.PenCapStyle.FlatCap)
+                p.setPen(pen)
+                p.drawLine(self._edge_point(ring, i / n), self._edge_point(ring, (i + 1) / n))
+
     def _unit(self) -> float:
-        return min((self.width() - 24) / self.width_u, (self.height() - 24) / (self.height_u + 0.1))
+        return min((self.width() - 44) / self.width_u, (self.height() - 44) / (self.height_u + 0.1))
 
     def _rect(self, k) -> QRectF:
         u = self._unit()
@@ -86,9 +113,12 @@ class KeyboardWidget(QWidget):
         u = self._unit()
         ox = (self.width() - self.width_u * u) / 2
         oy = (self.height() - self.height_u * u) / 2
+        board = QRectF(ox - 10, oy - 10, self.width_u * u + 20, self.height_u * u + 20)
+        if self.edge_colors:
+            self._paint_edge(p, board)
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor('#11191b'))
-        p.drawRoundedRect(QRectF(ox - 10, oy - 10, self.width_u * u + 20, self.height_u * u + 20), 14, 14)
+        p.drawRoundedRect(board, 14, 14)
         font = QFont()
         for k in self.keys:
             r = self._rect(k)

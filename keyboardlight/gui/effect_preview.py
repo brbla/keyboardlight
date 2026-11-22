@@ -17,6 +17,7 @@ H = 6.25
 CX, CY = W / 2, H / 2
 SPEED = [2.2, 1.6, 1.1, 0.75, 0.5]           # speed byte 0 (fastest) .. 4 (slowest) -> relative tempo
 REACTIVE = {7, 8, 9}
+CLOUD_PERIOD = [0.33, 0.6, 0.95, 1.25, 1.6]   # seconds per flash, speed byte 0 (fastest) .. 4 (measured 0, 2, 4)
 
 
 def _centre(k):
@@ -63,10 +64,15 @@ def frame(light, t: float, presses: list[tuple[int, float]]) -> dict[int, QColor
             c = _rgb(t * v * 0.08)
         elif eff == 5:                                          # breathing
             c = col(x / W + t * 0.02, 0.5 - 0.5 * math.cos(t * v * 1.6))
-        elif eff == 2:                                          # cloud: soft blobs drifting sideways
-            ph = x / W * 2 - sgn * t * v * 0.3
-            val = 0.5 + 0.5 * math.sin(2 * math.pi * ph) * math.cos(y / H * math.pi)
-            c = col(ph * 0.5, val)
+        elif eff == 2:                                          # cloud (30 fps camera measurements)
+            period = CLOUD_PERIOD[max(0, min(4, light.speed))]
+            if rainbow:                                         # whole board slowly cycles through the hues
+                c = _rgb(t * 0.135 / period + x / W * 0.08)
+            else:                                               # repeated flash sweeping across, dark in between
+                xx = x / W if sgn > 0 else 1 - x / W
+                local = (t - xx * 0.3 * period) % period
+                dur = 0.55 * period
+                c = col(0, math.sin(math.pi * local / dur) ** 2 if local < dur else 0.0)
         elif eff == 3:                                          # serpentine: snake along rows
             row = int(y)
             pos = (x if row % 2 == 0 else W - x) + row * W
@@ -141,4 +147,36 @@ def frame(light, t: float, presses: list[tuple[int, float]]) -> dict[int, QColor
         r, g, b = (max(0.0, min(1.0, ch * gain)) for ch in c)
         if r + g + b > 0.02:
             out[k.slot] = QColor(int(r * 255), int(g * 255), int(b * 255))
+    return out
+
+
+EDGE_SEGMENTS = 160
+
+
+def edge_frame(mode: int, t: float, brightness: int) -> list[QColor] | None:
+    """Colours of the edge strip (underglow), EDGE_SEGMENTS points around the case starting at the bottom middle
+    and going clockwise. Approximation of what the webcam and the user saw (docs/odyssey-protocol.md)."""
+    if mode is None or mode >= 6 or brightness <= 0:
+        return None
+    gain = brightness / 4
+    out = []
+    for i in range(EDGE_SEGMENTS):
+        s = i / EDGE_SEGMENTS
+        u = min(s, 1 - s) * 2                       # 0 = bottom middle, 1 = top middle (symmetric)
+        val = 1.0
+        if mode == 0:                               # rainbow flowing around
+            h = s - t * 0.12
+        elif mode == 1:                             # one colour, slowly changing
+            h = t * 0.04
+        elif mode == 2:                             # pulsing
+            h = 0.6 - 0.25 * u
+            val = 0.5 - 0.5 * math.cos(t * 1.6)
+        elif mode == 3:                             # static gradient
+            h = 0.62 - 0.3 * u
+        elif mode == 4:                             # rainbow running symmetrically up and down
+            h = u * 0.8 - t * 0.3
+        else:                                       # 5: rainbow rotating around, fixed spacing
+            h = s * 3 - t * 0.5
+        r, g, b = _rgb(h, val * gain)
+        out.append(QColor(int(r * 255), int(g * 255), int(b * 255)))
     return out
