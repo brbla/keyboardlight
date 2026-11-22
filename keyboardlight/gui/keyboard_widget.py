@@ -17,8 +17,11 @@ MARK = QColor('#ffa000')
 class KeyboardWidget(QWidget):
     selectionChanged = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, keys=None, width_u=None, height_u=None):
         super().__init__(parent)
+        self.keys = keys if keys is not None else KEYS
+        self.width_u = width_u or WIDTH_U
+        self.height_u = height_u or HEIGHT_U
         self.setMinimumSize(640, 250)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.colors: dict[int, QColor] = {}      # slot -> fill colour (lit key); missing = unlit
@@ -30,17 +33,17 @@ class KeyboardWidget(QWidget):
 
     # ---- geometry ----------------------------------------------------------
     def _unit(self) -> float:
-        return min((self.width() - 24) / WIDTH_U, (self.height() - 24) / (HEIGHT_U + 0.1))
+        return min((self.width() - 24) / self.width_u, (self.height() - 24) / (self.height_u + 0.1))
 
     def _rect(self, k) -> QRectF:
         u = self._unit()
-        ox = (self.width() - WIDTH_U * u) / 2
-        oy = (self.height() - HEIGHT_U * u) / 2 + 0.1 * u
+        ox = (self.width() - self.width_u * u) / 2
+        oy = (self.height() - self.height_u * u) / 2 + 0.1 * u
         pad = u * 0.06
         return QRectF(ox + k.x * u + pad, oy + k.y * u + pad, k.w * u - 2 * pad, u - 2 * pad)
 
     def key_at(self, pos: QPointF):
-        for k in KEYS:
+        for k in self.keys:
             if self._rect(k).contains(pos):
                 return k
         return None
@@ -81,13 +84,13 @@ class KeyboardWidget(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         u = self._unit()
-        ox = (self.width() - WIDTH_U * u) / 2
-        oy = (self.height() - HEIGHT_U * u) / 2
+        ox = (self.width() - self.width_u * u) / 2
+        oy = (self.height() - self.height_u * u) / 2
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(QColor('#11191b'))
-        p.drawRoundedRect(QRectF(ox - 10, oy - 10, WIDTH_U * u + 20, HEIGHT_U * u + 20), 14, 14)
+        p.drawRoundedRect(QRectF(ox - 10, oy - 10, self.width_u * u + 20, self.height_u * u + 20), 14, 14)
         font = QFont()
-        for k in KEYS:
+        for k in self.keys:
             r = self._rect(k)
             lit = self.colors.get(k.slot)
             fill = KEY_BG

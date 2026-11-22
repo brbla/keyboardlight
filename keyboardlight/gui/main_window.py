@@ -21,6 +21,9 @@ from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRE
 from keyboardlight.devices.odyssey_macros import MODES
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
 from keyboardlight.gui.macro_page import MacroPage
+from keyboardlight.gui.aula_page import AulaPage
+from keyboardlight.gui.widgets import nav_only
+from keyboardlight.devices import aula as aula_dev
 from keyboardlight.i18n import _
 
 STYLE = """
@@ -86,6 +89,11 @@ class MainWindow(QMainWindow):
         side = QFrame(objectName='side')
         side.setFixedWidth(200)
         sl = QVBoxLayout(side)
+        self.device_cb = QComboBox()
+        self.device_cb.addItem('Yenkee Odyssey', 'odyssey')
+        self.device_cb.addItem('AULA WIN68 HE', 'aula')
+        self.device_cb.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        sl.addWidget(self.device_cb)
         self.dev_label = QLabel('Odyssey', objectName='title', wordWrap=True)
         sl.addWidget(self.dev_label)
         self.battery_label = QLabel('', objectName='hint', wordWrap=True)
@@ -95,41 +103,49 @@ class MainWindow(QMainWindow):
         sl.addSpacing(10)
         self.nav = QButtonGroup(self)
         self.pages = QStackedWidget()
-        for i, name in enumerate([_('💡  Podsvícení'), _('⌨  Klávesy'), _('⏺  Makra'), _('⚙  Další')]):
+        for i, name in enumerate([_('💡  Podsvícení'), _('⌨  Klávesy'), _('⏺  Makra'), _('⚙  Další'),
+                                  _('🅰  AULA')]):
             b = QPushButton(name, objectName='nav', checkable=True)
             b.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.nav.addButton(b, i)
             sl.addWidget(b)
         sl.addStretch()
-        sl.addWidget(QLabel(_('Profily'), objectName='title'))
+        self.profiles_title = QLabel(_('Profily'), objectName='title')
+        sl.addWidget(self.profiles_title)
         self.profile_cb = QComboBox()
         sl.addWidget(self.profile_cb)
         prow = QHBoxLayout()
         self.profile_load_btn = QPushButton(_('Načíst'))
         self.profile_load_btn.clicked.connect(self._load_profile)
         prow.addWidget(self.profile_load_btn)
-        b = QPushButton(_('Uložit…'))
-        b.clicked.connect(self._save_profile)
-        prow.addWidget(b)
+        self.profile_save_btn = QPushButton(_('Uložit…'))
+        self.profile_save_btn.clicked.connect(self._save_profile)
+        prow.addWidget(self.profile_save_btn)
         sl.addLayout(prow)
-        b = QPushButton(_('Smazat profil'))
-        b.clicked.connect(self._delete_profile)
-        sl.addWidget(b)
+        self.profile_del_btn = QPushButton(_('Smazat profil'))
+        self.profile_del_btn.clicked.connect(self._delete_profile)
+        sl.addWidget(self.profile_del_btn)
         self.profiles = profiles.load_all()
         self._refresh_profiles()
         sl.addSpacing(16)
         self.reconnect_btn = QPushButton(_('Znovu připojit'))
-        self.reconnect_btn.clicked.connect(self.connect_device)
+        self.reconnect_btn.clicked.connect(lambda: self._set_device(self.device_cb.currentData()))
         sl.addWidget(self.reconnect_btn)
         lay.addWidget(side)
 
-        # ---- content
-        content = QVBoxLayout()
+        # ---- content: Odyssey pages (with its keyboard picture) or the AULA page
+        self.content_stack = QStackedWidget()
+        ody = QWidget()
+        content = QVBoxLayout(ody)
+        content.setContentsMargins(0, 0, 0, 0)
         self.kbd = KeyboardWidget()
         self.kbd.selectionChanged.connect(self._selection_changed)
         content.addWidget(self.kbd, 3)
         content.addWidget(self.pages, 2)
-        lay.addLayout(content, 1)
+        self.content_stack.addWidget(ody)
+        self.aula_page = AulaPage(lambda m: self.statusBar().showMessage(m, 5000))
+        self.content_stack.addWidget(self.aula_page)
+        lay.addWidget(self.content_stack, 1)
 
         self.pages.addWidget(self._build_lighting())
         self.pages.addWidget(self._build_keys())
@@ -137,8 +153,14 @@ class MainWindow(QMainWindow):
         self.pages.addWidget(self._build_other())
         self.nav.idClicked.connect(self._switch_page)
         self.nav.button(0).setChecked(True)
+        self.device_cb.currentIndexChanged.connect(lambda _i: self._set_device(self.device_cb.currentData()))
 
         self.connect_device()
+        # start with whichever supported keyboard is connected (Odyssey preferred)
+        if self.dev is None and aula_dev.find_hidraw():
+            self.device_cb.setCurrentIndex(1)
+        else:
+            self._set_device('odyssey')
 
     # ================================================================ device
     def connect_device(self):
@@ -280,7 +302,30 @@ class MainWindow(QMainWindow):
             return False
 
     # ================================================================ pages
+    def _set_device(self, kind: str):
+        aula = kind == 'aula'
+        for i in (0, 1, 2):
+            self.nav.button(i).setVisible(not aula)
+        self.nav.button(4).setVisible(aula)
+        for w in (self.profiles_title, self.profile_cb, self.profile_load_btn, self.profile_save_btn,
+                  self.profile_del_btn, self.battery_label):
+            w.setVisible(not aula)
+        if aula:
+            ok = self.aula_page.connect_device()
+            self.dev_label.setText('AULA WIN68 HE\n' + (_('kabelem (USB)') if ok else _('– nepřipojeno –')))
+            self.nav.button(4).setChecked(True)
+            self._switch_page(4)
+        else:
+            self.connect_device()
+            self.nav.button(0).setChecked(True)
+            self._switch_page(0)
+
     def _switch_page(self, i):
+        if i == 4:
+            self.content_stack.setCurrentIndex(1)
+            return
+        self.content_stack.setCurrentIndex(0)
+        self.kbd.setVisible(i != 3 or self.device_cb.currentData() == 'odyssey')
         self.pages.setCurrentIndex(i)
         self.kbd.multi = (i == 0)
         self.kbd.set_selected(set())
@@ -325,7 +370,6 @@ class MainWindow(QMainWindow):
         for val, name, note in EFFECTS:
             self.effect_cb.addItem(name + (f'  ({note})' if note else ''), val)
         self.effect_cb.currentIndexChanged.connect(self._lighting_changed)
-        self.effect_cb.activated.connect(lambda _i: self.try_edit.setFocus())
         g.addWidget(self.effect_cb, 0, 1)
 
         g.addWidget(QLabel(_('Jas')), 1, 0)
@@ -388,7 +432,8 @@ class MainWindow(QMainWindow):
         g.addWidget(self.color_panel, 0, 2, 4, 1)
 
         # keyboard input must not change these controls while the user tries an effect on the keyboard
-        for wdg in (self.effect_cb, self.bright, self.speed, self.intensity, self.dir_lr, self.dir_rl,
+        nav_only(self.effect_cb)
+        for wdg in (self.bright, self.speed, self.intensity, self.dir_lr, self.dir_rl,
                     self.rainbow, self.int_sel, self.int_all):
             wdg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.try_edit = QLineEdit(placeholderText=_('Vyzkoušejte efekt – pište sem (klávesnice reaguje na stisky)'))

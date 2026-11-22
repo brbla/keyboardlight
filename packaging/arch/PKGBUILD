@@ -1,8 +1,8 @@
 # Maintainer: brbla
 pkgname=keyboardlight
-pkgver=0.1.6
+pkgver=0.1.7
 pkgrel=1
-pkgdesc="Linux configurator for the Yenkee YKB 30 Odyssey keyboard: lighting, per-key colours, key remapping, macros, profiles"
+pkgdesc="Linux configurator for Yenkee YKB 30 Odyssey and AULA WIN68 HE keyboards: lighting, per-key colours, remapping, macros, profiles"
 arch=('any')
 url="https://github.com/brbla/keyboardlight"
 license=('MIT')

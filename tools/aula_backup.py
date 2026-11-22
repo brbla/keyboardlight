@@ -5,7 +5,7 @@ Replays exactly the read requests the official web driver (hed.aulacn.com) sends
 (sequence taken from the AulaControl project's capture re/captures/01_connect_handshake.json,
 Apache-2.0, https://github.com/sgtflixy/AulaControl) and stores every request + reply as JSON.
 Command 21 reads the per-key block addressed by (row, col): 21 00 00 00 18 05 ROW COL.
-All rows 1-6 x cols 0-15 are read (WIN68 has a different matrix than the WIN60 in the capture).
+All rows 0-6 x cols 0-21 (index = row*22+col) are read (WIN68 has a different matrix than the WIN60 in the capture).
 
 usage: aula_backup.py [out.json]
 """
@@ -75,8 +75,8 @@ def main():
         run(f'rgb 09 {sub:02x}', req(0x09, sub))
     run('keys 21 04 00', req(0x21, 0, 0, 0, 0x18, 0x04, 0x00))
     keys = 0
-    for row in range(1, 7):                       # 21 00 00 00 18 05 ROW COL  = read per-key block at (row, col)
-        for col in range(0, 16):
+    for row in range(0, 7):                       # 21 00 00 00 18 05 ROW COL  = read per-key block at (row, col)
+        for col in range(0, 22):
             replies = run(f'keys 21 05 r{row} c{col}', req(0x21, 0, 0, 0, 0x18, 0x05, row, col))
             if replies and any(replies[0][5:11]):
                 keys += 1

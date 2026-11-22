@@ -264,6 +264,39 @@ EN = {
     'Klávesnice AULA nenalezena.': 'AULA keyboard not found.',
     'Klávesnice AULA nevrátila informace o firmwaru.': 'The AULA keyboard did not return firmware information.',
 
+    '🅰  AULA': '🅰  AULA',
+    'Podsvícení': 'Lighting',
+    '– nepřipojeno –': '– not connected –',
+    'Spínače': 'Switches',
+    'Záloha': 'Backup',
+    '{name} – firmware {ver} ({build})': '{name} – firmware {ver} ({build})',
+    'Původní nastavení klávesnice zálohováno: {path}': 'Original keyboard settings backed up: {path}',
+    'Barva': 'Colour',
+    'Druhá barva': 'Second colour',
+    'Vlastní barvy jednotlivých kláves zůstávají tak, jak jsou uložené v klávesnici (úprava po klávesách přibude).':
+        'Per-key custom colours stay as stored in the keyboard (per-key editing will follow).',
+    'Efekt {n}': 'Effect {n}',
+    'Bod sepnutí každé klávesy (mm) – jak je uložený v klávesnici.': 'Actuation point of every key (mm) – as stored in the keyboard.',
+    'Čím menší číslo, tím dřív klávesa sepne (citlivější). Změnu bodu sepnutí aplikace zatím neumí – nejdřív ji ověříme i s návratem do původního stavu.':
+        'The smaller the number, the earlier the key actuates (more sensitive). Changing it is not supported yet – '
+        'it will be added once writing and restoring are verified.',
+    'Záloha a obnova': 'Backup and restore',
+    'Při prvním připojení aplikace sama uloží původní nastavení klávesnice. „Vrátit nastavení ze zálohy“ zapíše zpět podsvícení a barvy kláves; ostatní nastavení (spínače, SOCD…) aplikace nemění, takže zůstávají původní.':
+        'On first connection the app saves the keyboard\'s original settings. “Restore from backup” writes back the '
+        'lighting and key colours; other settings (switches, SOCD…) are never changed by the app, so they stay original.',
+    'Zálohovat teď': 'Back up now',
+    'Vrátit nastavení ze zálohy…': 'Restore from backup…',
+    'Zálohy: {dir}': 'Backups: {dir}',
+    'Záloha uložena: {path}': 'Backup saved: {path}',
+    'Vyberte zálohu': 'Choose a backup',
+    'Obnoveno: {what}': 'Restored: {what}',
+    'Klávesnice už odpovídá záloze – nebylo co měnit.': 'The keyboard already matches the backup – nothing to change.',
+    'boční podsvícení': 'side lighting',
+    'Klávesnice AULA neodpověděla na čtení podsvícení.': 'The AULA keyboard did not answer the lighting read.',
+    'Neon': 'Neon', 'Radar': 'Radar', 'Polární záře': 'Aurora', 'Třpyt': 'Twinkle', 'Kříž': 'Cross',
+    'Reakce na rychlost psaní': 'Speed respond', 'Automatické vlnky': 'Auto ripple', 'Pruhy': 'Striation',
+    'Ohňostroj': 'Fireworks',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
