@@ -222,6 +222,13 @@ EN = {
     'Ctrl + knoflík teď mění jas obrazovky': 'Ctrl + knob now changes the screen brightness',
     'Ctrl + knoflík už jas obrazovky nemění': 'Ctrl + knob no longer changes the screen brightness',
 
+    'Yenkee Odyssey\npřes Bluetooth': 'Yenkee Odyssey\nover Bluetooth',
+    'Přes Bluetooth nastavení měnit nejde – připojte klávesnici kabelem nebo přes USB přijímač (přepínač 2.4G). Uložené nastavení platí dál.':
+        'Settings cannot be changed over Bluetooth – connect the keyboard by cable or through the USB receiver '
+        '(switch on 2.4G). Stored settings keep working.',
+    'Baterie: {pct} %': 'Battery: {pct} %',
+    'Stav baterie hlásí klávesnice jen přes Bluetooth.': 'The keyboard reports its battery level only over Bluetooth.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

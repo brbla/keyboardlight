@@ -15,7 +15,7 @@ from keyboardlight.devices.odyssey import BACKUP_DIR, Lighting, Odyssey, Odyssey
 from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFECT_CUSTOM, EFFECTS, EVDEV_MODIFIER,
                                                   EVDEV_TO_HID, FN_SLOT, HID_NAMES, KEY_BY_SLOT, KEYS, MODIFIERS,
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
-from keyboardlight import i18n, kde_shortcuts, profiles
+from keyboardlight import battery, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
 from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRECTION, macro_entry
 from keyboardlight.devices.odyssey_macros import MODES
@@ -87,6 +87,10 @@ class MainWindow(QMainWindow):
         sl = QVBoxLayout(side)
         self.dev_label = QLabel('Odyssey', objectName='title', wordWrap=True)
         sl.addWidget(self.dev_label)
+        self.battery_label = QLabel('', objectName='hint', wordWrap=True)
+        sl.addWidget(self.battery_label)
+        self._battery_timer = QTimer(self, interval=60000, timeout=self._update_battery)
+        self._battery_timer.start()
         sl.addSpacing(10)
         self.nav = QButtonGroup(self)
         self.pages = QStackedWidget()
@@ -146,10 +150,18 @@ class MainWindow(QMainWindow):
             self.keymap_default, self.keymap = self.dev.read_keymaps()
             info = self.dev.info()
         except OdysseyError as e:
+            if self.dev:
+                self.dev.close()
             self.dev = None
             self.dev_label.setText(_('Odyssey\n– nepřipojeno –'))
-            self.statusBar().showMessage(str(e))
             self._set_enabled(False)
+            if battery.bluetooth_battery() is not None:
+                self.dev_label.setText(_('Yenkee Odyssey\npřes Bluetooth'))
+                self.statusBar().showMessage(_('Přes Bluetooth nastavení měnit nejde – připojte klávesnici kabelem '
+                                               'nebo přes USB přijímač (přepínač 2.4G). Uložené nastavení platí dál.'))
+            else:
+                self.statusBar().showMessage(str(e))
+            self._update_battery()
             return
         self.dev_label.setText('Yenkee Odyssey\n' + (_('bezdrátově (2,4 GHz)') if self.dev.wireless else _('kabelem (USB)')))
         self.info_label.setText(_('Zařízení: {path}').format(path=self.dev.path) + f'\nInfo (0x03): {info.hex(" ")}\n'
@@ -159,6 +171,12 @@ class MainWindow(QMainWindow):
         self._load_lighting_ui()
         self._refresh_keyboard()
         self.statusBar().showMessage(_('Připojeno – nastavení načteno z klávesnice'), 4000)
+        self._update_battery()
+
+    def _update_battery(self):
+        pct = battery.bluetooth_battery()
+        self.battery_label.setText(_('Baterie: {pct} %').format(pct=pct) if pct is not None else '')
+        self.battery_label.setToolTip(_('Stav baterie hlásí klávesnice jen přes Bluetooth.'))
 
     # ================================================================ profiles
     def _refresh_profiles(self, select: str | None = None):

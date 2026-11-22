@@ -10,6 +10,9 @@ corrupted writes). Verified: info, config read/write, per-key colours, key map r
 **Bluetooth** exposes only feature report 5 (vendor page 0xFF01, 4 B); GET_FEATURE returns `05 00 00 00 00`,
 all other report IDs fail. The vendor app never uses feature reports (no HidD_SetFeature import), so there is no
 known configuration protocol over Bluetooth – settings stored in the keyboard still apply.
+Bluetooth is **LE** (HID over GATT) with the standard **Battery Service** (0x180F) → BlueZ `org.bluez.Battery1.Percentage`
+(used by the app). A Telink vendor GATT service `00010203-0405-0607-0809-0a0b0c0d1912` (Telink OTA) is present –
+deliberately not touched.
 
 ## Interfaces (USB)
 
