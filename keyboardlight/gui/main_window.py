@@ -575,6 +575,10 @@ class MainWindow(QMainWindow):
                                    'kabel vytáhněte a zasuňte, u přijímače přepněte přepínač na OFF a zpět. '
                                    'Nastavení zůstane uložené.'), objectName='hint', wordWrap=True)
         g.addWidget(self.stuck_hint, 6, 0, 1, 3)
+        self.show_all = QCheckBox(_('Zobrazit všechny volby (i ty, které u tohoto efektu podle testu nic nedělají)'))
+        self.show_all.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.show_all.toggled.connect(self._update_lighting_widgets)
+        g.addWidget(self.show_all, 7, 0, 1, 3)
 
         # per-key section
         self.custom_box = QFrame()
@@ -595,7 +599,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(7, 1)
+        g.setRowStretch(8, 1)
         return w
 
     def _load_lighting_ui(self):
@@ -620,14 +624,15 @@ class MainWindow(QMainWindow):
         off = eff == EFFECT_OFF
         self.custom_box.setVisible(custom)
         # show only controls that do something for the current effect
+        every = self.show_all.isChecked() and not custom and not off
         for wdg in (self.speed_lbl, self.speed):
-            wdg.setVisible(eff not in NO_SPEED)
+            wdg.setVisible(eff not in NO_SPEED or every)
         for wdg in (self.dir_lr, self.dir_rl):
-            wdg.setVisible(eff in WITH_DIRECTION)
+            wdg.setVisible(eff in WITH_DIRECTION or every)
         first, second = DIRECTION_LABELS.get(eff, (_('Zleva doprava'), _('Zprava doleva')))
         self.dir_lr.setText(first)
         self.dir_rl.setText(second)
-        fixed = eff in FIXED_COLORS
+        fixed = eff in FIXED_COLORS and not every
         self.rainbow.setVisible(not custom and not off and not fixed)
         self.color_panel.setVisible(not off and not fixed)
         self.fixed_hint.setVisible(fixed)

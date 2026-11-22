@@ -361,6 +361,9 @@ EN = {
     'Jedním směrem': 'One way',
     'Opačným směrem': 'The other way',
 
+    'Zobrazit všechny volby (i ty, které u tohoto efektu podle testu nic nedělají)':
+        'Show all options (including those that had no effect on this effect in tests)',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
