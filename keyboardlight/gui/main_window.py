@@ -15,7 +15,7 @@ from keyboardlight.devices.odyssey import BACKUP_DIR, Lighting, Odyssey, Odyssey
 from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFECT_CUSTOM, EFFECTS, EVDEV_MODIFIER,
                                                   EVDEV_TO_HID, FN_SLOT, HID_NAMES, KEY_BY_SLOT, KEYS, MODIFIERS,
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
-from keyboardlight import battery, firmware, i18n, kde_shortcuts, profiles
+from keyboardlight import aula_profiles, battery, firmware, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
 from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRECTION, macro_entry
 from keyboardlight.devices.odyssey_macros import MODES
@@ -208,9 +208,19 @@ class MainWindow(QMainWindow):
         self.battery_label.setToolTip(_('Stav baterie hlásí klávesnice jen přes Bluetooth.'))
 
     # ================================================================ profiles
+    def _aula_mode(self) -> bool:
+        return hasattr(self, 'device_cb') and self.device_cb.currentData() == 'aula'
+
     def _refresh_profiles(self, select: str | None = None):
         cur = select or self.profile_cb.currentData()
         self.profile_cb.clear()
+        if self._aula_mode():
+            for name, d in aula_profiles.load_all().items():
+                self.profile_cb.addItem(aula_profiles.label(name, d), name)
+            i = self.profile_cb.findData(cur)
+            if i >= 0:
+                self.profile_cb.setCurrentIndex(i)
+            return
         for p in self.profiles:
             self.profile_cb.addItem(f'{p.name} – {p.effect_label()}', p.name)
             self.profile_cb.setItemData(self.profile_cb.count() - 1, p.summary(), Qt.ItemDataRole.ToolTipRole)
@@ -219,6 +229,29 @@ class MainWindow(QMainWindow):
             self.profile_cb.setCurrentIndex(i)
 
     def _save_profile(self):
+        if self._aula_mode():
+            dev = self.aula_page.dev
+            if not dev:
+                return
+            from PyQt6.QtWidgets import QInputDialog
+            name, ok = QInputDialog.getText(self, _('Uložit profil'), _('Název profilu (např. Den, Noc, Hry):'),
+                                            text=self.profile_cb.currentData() or _('Hry'))
+            name = name.strip()
+            if not ok or not name:
+                return
+            if name in aula_profiles.load_all() and QMessageBox.question(
+                    self, _('Profil'), _('Profil „{name}“ už existuje. Přepsat?').format(name=name)) \
+                    != QMessageBox.StandardButton.Yes:
+                return
+            self.setCursor(Qt.CursorShape.WaitCursor)
+            try:
+                aula_profiles.save(dev, name)
+            finally:
+                self.unsetCursor()
+            self._refresh_profiles(name)
+            self.statusBar().showMessage(_('Profil „{name}“ uložen ({what})').format(
+                name=name, what=_('podsvícení, barvy kláves, spínače, SOCD')), 4000)
+            return
         if not self.light:
             return
         dlg = QDialog(self)
@@ -262,6 +295,23 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(_('Profil „{name}“ uložen ({what})').format(name=n, what=p.summary()), 4000)
 
     def _load_profile(self):
+        if self._aula_mode():
+            name, dev = self.profile_cb.currentData(), self.aula_page.dev
+            if not name or not dev:
+                return
+            self.setCursor(Qt.CursorShape.WaitCursor)
+            try:
+                written = aula_profiles.apply(dev, name)
+            except (aula_dev.AulaError, OSError) as e:
+                QMessageBox.warning(self, 'AULA', str(e))
+                return
+            finally:
+                self.unsetCursor()
+            self.aula_page.connect_device()
+            self.statusBar().showMessage(_('Profil „{name}“ načten').format(name=name) +
+                                         (_(' – zapsáno: {what}').format(what=', '.join(written)) if written
+                                          else _(' – beze změny')), 5000)
+            return
         i = self.profile_cb.currentIndex()
         if i < 0 or not self.dev:
             return
@@ -280,10 +330,17 @@ class MainWindow(QMainWindow):
                                       else _(' – beze změny')), 5000)
 
     def _delete_profile(self):
+        if self._aula_mode():
+            name = self.profile_cb.currentData()
+            if name and QMessageBox.question(self, _('Profil'), _('Smazat profil „{name}“?').format(name=name)) \
+                    == QMessageBox.StandardButton.Yes:
+                aula_profiles.delete(name)
+                self._refresh_profiles()
+            return
         i = self.profile_cb.currentIndex()
         if i < 0:
             return
-        if QMessageBox.question(self, _('Profil'), f'Smazat profil „{self.profiles[i].name}“?') \
+        if QMessageBox.question(self, _('Profil'), _('Smazat profil „{name}“?').format(name=self.profiles[i].name)) \
                 == QMessageBox.StandardButton.Yes:
             del self.profiles[i]
             profiles.save_all(self.profiles)
@@ -348,9 +405,8 @@ class MainWindow(QMainWindow):
         for i in (0, 1, 2):
             self.nav.button(i).setVisible(not aula)
         self.nav.button(4).setVisible(aula)
-        for w in (self.profiles_title, self.profile_cb, self.profile_load_btn, self.profile_save_btn,
-                  self.profile_del_btn, self.battery_label):
-            w.setVisible(not aula)
+        self.battery_label.setVisible(not aula)
+        self._refresh_profiles()
         if hasattr(self, '_present'):
             self._update_device_list()
         if aula:

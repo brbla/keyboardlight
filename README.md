@@ -21,7 +21,7 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 | **Macros** | record from the keyboard, type text (aware of your system keyboard layout via libxkbcommon), mouse clicks, delays; play once / while held / toggle / N times |
 | **Profiles** | save named presets (e.g. *Day*, *Night*) and switch with one click or `keyboardlight --profile Night` (bind it to a hotkey or a timer) |
 | **Knob** | the knob always changes volume (fixed in firmware); one click under *More* makes **Ctrl + knob** change the screen brightness (KDE Plasma) |
-| **AULA WIN68 HE** | lighting effects, per-key colours, per-key actuation point and rapid trigger (sensitivity), SOCD pairs, automatic backup of the original settings and one-click restore |
+| **AULA WIN68 HE** | lighting effects, per-key colours, per-key actuation point and rapid trigger (sensitivity), SOCD pairs, automatic backup of the original settings and one-click restore, profiles |
 | **Battery** | battery level shown in the app while the keyboard is connected over Bluetooth (BLE Battery Service) |
 | **Auto-detect** | detects which keyboard is connected (cable, 2.4 GHz receiver, Bluetooth) at start and while running, and switches to the right settings |
 | **Languages** | English and Czech (follows the system language, switchable under *More*) |

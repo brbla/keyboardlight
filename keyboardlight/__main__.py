@@ -37,9 +37,26 @@ def main() -> int:
         allp = profiles.load_all()
         if args.list_profiles:
             for p in allp:
-                print(f'{p.name}\t({p.summary()})')
+                print(f'Odyssey\t{p.name}\t({p.summary()})')
+            from keyboardlight import aula_profiles
+            for name in aula_profiles.load_all():
+                print(f'AULA\t{name}')
             return 0
         match = [p for p in allp if p.name.lower() == args.profile.lower()]
+        from keyboardlight import aula_profiles
+        from keyboardlight.devices import aula as aula_dev
+        aula_names = {n.lower(): n for n in aula_profiles.load_all()}
+        if args.profile.lower() in aula_names and aula_dev.find_hidraw():
+            try:
+                dev = aula_dev.Aula()
+                written = aula_profiles.apply(dev, aula_names[args.profile.lower()])
+                dev.close()
+            except (aula_dev.AulaError, OSError) as e:
+                print(_('Chyba: {err}').format(err=e), file=sys.stderr)
+                return 1
+            print(_('Profil „{name}“ načten').format(name=aula_names[args.profile.lower()])
+                  + (_(' – zapsáno: {what}').format(what=', '.join(written)) if written else _(' – beze změny')))
+            return 0
         if not match:
             print(_('Profil „{name}“ neexistuje. Uložené: {saved}').format(name=args.profile, saved=', '.join(p.name for p in allp) or _('žádné')),
                   file=sys.stderr)
@@ -49,7 +66,7 @@ def main() -> int:
             written = profiles.apply(dev, match[0])
             dev.close()
         except OdysseyError as e:
-            print(f'Chyba: {e}', file=sys.stderr)
+            print(_('Chyba: {err}').format(err=e), file=sys.stderr)
             return 1
         print(_('Profil „{name}“ načten').format(name=match[0].name) + (_(' – zapsáno: {what}').format(what=', '.join(written)) if written else _(' – beze změny')))
         return 0

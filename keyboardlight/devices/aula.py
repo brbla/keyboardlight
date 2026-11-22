@@ -275,8 +275,49 @@ BACKUP_DIR = os.path.expanduser('~/.local/share/keyboardlight/backups/aula')
 
 
 def restore(dev: 'Aula', path: str) -> list[str]:
-    """Write back the areas we know how to write (lighting, side strip, per-key colours), verified."""
-    areas = backup_areas(path)
+    """Write back everything we know how to write from a backup file (verified)."""
+    return apply_areas(dev, backup_areas(path))
+
+
+def capture(dev: 'Aula') -> dict:
+    """Current restorable state (same keys as backup_areas) – fast: only the 68 real keys."""
+    from keyboardlight.devices.aula_layout import KEYS
+    on, pairs = dev.read_socd()
+    return {'light': dev.read_lighting_raw(), 'side': dev.read_lighting_raw(True),
+            'colors0': dev.read_custom_colors(0), 'colors1': dev.read_custom_colors(1),
+            'keys': {k.slot: dev.read_key_block(k.slot) for k in KEYS}, 'socd_on': on, 'socd_pairs': pairs}
+
+
+def areas_to_json(a: dict) -> dict:
+    out = {}
+    for k, v in a.items():
+        if isinstance(v, (bytes, bytearray)):
+            out[k] = bytes(v).hex()
+        elif k == 'keys':
+            out[k] = {str(i): bytes(b).hex() for i, b in v.items()}
+        elif k == 'socd_pairs':
+            out[k] = [list(p) for p in v]
+        else:
+            out[k] = v
+    return out
+
+
+def areas_from_json(d: dict) -> dict:
+    out = {}
+    for k, v in d.items():
+        if k in ('light', 'side', 'colors0', 'colors1'):
+            out[k] = bytes.fromhex(v)
+        elif k == 'keys':
+            out[k] = {int(i): bytes.fromhex(b) for i, b in v.items()}
+        elif k == 'socd_pairs':
+            out[k] = [tuple(p) for p in v]
+        else:
+            out[k] = v
+    return out
+
+
+def apply_areas(dev: 'Aula', areas: dict) -> list[str]:
+    """Write the given areas to the keyboard, only where they differ; every write is verified."""
     done = []
     # per-key colours first: writing them switches the keyboard to the custom-colour effect,
     # so the lighting block (with the original effect) must be written afterwards
@@ -287,9 +328,7 @@ def restore(dev: 'Aula', path: str) -> list[str]:
     if 'light' in areas and dev.read_lighting_raw() != areas['light']:
         dev.write_lighting_raw(areas['light'])
         done.append(_('podsvícení'))
-    if 'side' in areas and dev.read_lighting_raw(True) != areas['side']:
-        dev.write_lighting_raw(areas['side'], True)
-        done.append(_('boční podsvícení'))
+    # the WIN68 HE has no side light strip: its 08 block exists but writes are ignored – skip quietly
     if 'socd_pairs' in areas and 'socd_on' in areas:
         want = (areas['socd_on'], areas['socd_pairs'])
         if dev.read_socd() != want:

@@ -337,6 +337,12 @@ EN = {
     '{name} odpojena': '{name} disconnected',
     'Připojena i {name} – přepnete vlevo nahoře': '{name} is connected too – switch at the top left',
 
+    'Hry': 'Games',
+    'podsvícení, barvy kláves, spínače, SOCD': 'lighting, key colours, switches, SOCD',
+    'Smazat profil „{name}“?': 'Delete profile “{name}”?',
+
+    'Chyba: {err}': 'Error: {err}',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
