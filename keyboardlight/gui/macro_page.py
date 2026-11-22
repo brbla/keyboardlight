@@ -18,6 +18,7 @@ class MacroPage(QFrame):
     macrosChanged = pyqtSignal()          # names / count changed (key page combo must refresh)
     macroDeleted = pyqtSignal(int)        # index of a deleted macro
     saveRequested = pyqtSignal(bytes)     # binary block to write to the keyboard
+    loadRequested = pyqtSignal()          # read the macros stored in the keyboard
 
     def __init__(self, macros: list[Macro], persist, parent=None):
         super().__init__(parent)
@@ -96,6 +97,9 @@ class MacroPage(QFrame):
         self.save_btn = QPushButton(_('Uložit makra do klávesnice'))
         self.save_btn.clicked.connect(self._save)
         tools.addWidget(self.save_btn, 2, 3)
+        b = QPushButton(_('Načíst makra z klávesnice'))
+        b.clicked.connect(self.loadRequested.emit)
+        tools.addWidget(b, 2, 2)
         g.addLayout(tools, 1, 1)
         hint = QLabel(_('Makro posílá kódy kláves – výsledný znak určuje rozložení klávesnice v systému, proto '
                       'u „Vložit text“ vyber stejné rozložení, jaké používáš. Makro přiřadíš klávese na stránce '
@@ -291,6 +295,13 @@ class MacroPage(QFrame):
         if self.rec_btn.isChecked():
             self.rec_btn.setChecked(False)
         self.saveRequested.emit(build_block(self.macros))
+
+    def replace_macros(self, macros: list[Macro]):
+        self.macros[:] = macros
+        self.persist(self.macros)
+        self._reload_list(0 if macros else None)
+        self.macrosChanged.emit()
+        self.mark_saved()
 
     def mark_saved(self):
         self.dirty = False

@@ -64,7 +64,7 @@ EFFECTS = [  # value, Czech name, note
 ]
 EFFECT_CUSTOM = 19
 EFFECT_OFF = 20
-NO_SPEED = {6, 16, 17, 18, EFFECT_CUSTOM, EFFECT_OFF}   # static, or speed has no visible effect (webcam-verified)
+NO_SPEED = {6, 17, 18, EFFECT_CUSTOM, EFFECT_OFF}   # static, or speed has no visible effect (webcam-verified, 30 fps)
 FIXED_COLORS = {4, 11, 12, 17, 18}                # own colours; colour + rainbow ignored (webcam-verified)
 WITH_DIRECTION = {1, 2, 3, 12, 18}             # webcam-verified; labels for direction 00 / ff:
 DIRECTION_LABELS = {

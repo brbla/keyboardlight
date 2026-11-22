@@ -181,7 +181,9 @@ class MainWindow(QMainWindow):
             self.dev = None
         try:
             self.dev = Odyssey()
-            self.light = self.dev.read_lighting()
+            block = self.dev.read_config_block()
+            self.light = Lighting.from_block(block)
+            self._mac_mode = Odyssey.mac_mode_from_block(block)
             self.key_colors = self.dev.read_key_colors()
             self.keymap_default, self.keymap = self.dev.read_keymaps()
             info = self.dev.info()
@@ -205,6 +207,7 @@ class MainWindow(QMainWindow):
         self.colors_dirty = False
         self._set_enabled(True)
         self._load_lighting_ui()
+        self._load_mode_ui(self._mac_mode)
         self._refresh_keyboard()
         self.statusBar().showMessage(_('Připojeno – nastavení načteno z klávesnice'), 4000)
         self._update_battery()
@@ -214,9 +217,17 @@ class MainWindow(QMainWindow):
                 or not self.isVisible()):
             return
         try:
-            now = self.dev.read_lighting()
+            block = self.dev.read_config_block()
         except (OdysseyError, OSError):
             return                                  # unplugged – the hot-plug check handles it
+        now = Lighting.from_block(block)
+        mac = Odyssey.mac_mode_from_block(block)
+        if mac != getattr(self, '_mac_mode', mac) and self.mode_cb.isEnabled():
+            self._mac_mode = mac
+            self._load_mode_ui(mac)
+            self.statusBar().showMessage(_('Na klávesnici přepnuto: {effect}').format(
+                effect=self.mode_cb.currentText()), 4000)
+        self._mac_mode = mac
         if now == self.light or self._write_timer.isActive():
             return
         changed_effect = now.effect != self.light.effect
@@ -373,11 +384,23 @@ class MainWindow(QMainWindow):
             profiles.save_all(self.profiles)
             self._refresh_profiles()
 
+    def _load_mode_ui(self, mac: bool):
+        self.mode_cb.blockSignals(True)
+        self.mode_cb.setCurrentIndex(1 if mac else 0)
+        self.mode_cb.blockSignals(False)
+
+    def _mode_changed(self):
+        mac = bool(self.mode_cb.currentData())
+        if self._guard(self.dev.write_mac_mode, mac) if self.dev else False:
+            self._mac_mode = mac
+            self.statusBar().showMessage(_('Režim kláves uložen: {mode}').format(mode=self.mode_cb.currentText()), 3000)
+
     def _set_enabled(self, on: bool):
         for i in (0, 1):
             self.pages.widget(i).setEnabled(on)
         # the "More" page stays usable (language, knob shortcut); only device actions depend on the keyboard
         self.factory_colors_btn.setEnabled(on)
+        self.mode_cb.setEnabled(on)
 
     def _guard(self, fn, *a):
         if not self.dev:
@@ -543,7 +566,7 @@ class MainWindow(QMainWindow):
         self.bright = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=4, pageStep=1)
         self.bright.setToolTip(_('jas celé klávesnice (0 = zhasnuto)'))
         self.bright.valueChanged.connect(self._lighting_changed)
-        self.bright_box = stepped(self.bright, [_('zhasnuto'), '1', '2', '3', _('max')])
+        self.bright_box = stepped(self.bright, [_('zhasnuto'), _('max')])
         jas.addWidget(self.bright_box, 1)
         self.intensity = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=100, value=100)
         self.intensity.setToolTip(_('jas vybraných kláves nebo celé klávesnice – každá klávesa může mít jiný'))
@@ -567,7 +590,7 @@ class MainWindow(QMainWindow):
         self.speed = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=4, pageStep=1)
         self.speed.setToolTip(_('vlevo pomalu, vpravo rychle'))
         self.speed.valueChanged.connect(self._lighting_changed)
-        self.speed_box = stepped(self.speed, [_('pomalu'), '2', '3', '4', _('rychle')])
+        self.speed_box = stepped(self.speed, [_('pomalu'), _('rychle')])
         g.addWidget(self.speed_box, 2, 1)
 
         dirs = QHBoxLayout()
@@ -1055,6 +1078,7 @@ class MainWindow(QMainWindow):
         self.macro_page.macrosChanged.connect(self._refresh_macro_combo)
         self.macro_page.macroDeleted.connect(self._macro_deleted)
         self.macro_page.saveRequested.connect(self._save_macros)
+        self.macro_page.loadRequested.connect(self._load_macros)
         self._refresh_macro_combo()
         return self.macro_page
 
@@ -1065,6 +1089,31 @@ class MainWindow(QMainWindow):
             self.macro_cb.addItem(f'{i + 1}. {m.name}')
         if 0 <= cur < self.macro_cb.count():
             self.macro_cb.setCurrentIndex(cur)
+
+    def _load_macros(self):
+        if not self.dev:
+            self.statusBar().showMessage(_('Klávesnice není připojená'))
+            return
+        try:
+            block = self.dev.read_macro_block()
+        except (OdysseyError, OSError) as e:
+            QMessageBox.warning(self, _('Chyba komunikace'), str(e))
+            return
+        mine = self.macro_page.macros
+        if block == odyssey_macros.build_block(mine):
+            QMessageBox.information(self, _('Makra'), _('Makra v klávesnici jsou stejná jako v aplikaci.'))
+            return
+        found = odyssey_macros.parse_block(block, [m.name for m in mine])
+        if not found:
+            QMessageBox.information(self, _('Makra'), _('V klávesnici nejsou uložená žádná makra '
+                                                         '(např. po obnovení továrního nastavení).'))
+            return
+        if QMessageBox.question(self, _('Makra'), _('Makra v klávesnici (počet: {n}) se liší od maker v aplikaci. '
+                                                     'Nahradit jimi makra v aplikaci? (Klávesnice si nepamatuje '
+                                                     'názvy maker.)').format(n=len(found))) \
+                == QMessageBox.StandardButton.Yes:
+            self.macro_page.replace_macros(found)
+            self.statusBar().showMessage(_('Makra načtena z klávesnice: {n}').format(n=len(found)), 4000)
 
     def _save_macros(self, block: bytes):
         if self._guard(self.dev.write_macros, block) if self.dev else False:
@@ -1100,6 +1149,18 @@ class MainWindow(QMainWindow):
         self.info_label = QLabel('', objectName='hint', wordWrap=True)
         self.info_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         v.addWidget(self.info_label)
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(QLabel(_('Režim kláves:')))
+        self.mode_cb = nav_only(QComboBox())
+        self.mode_cb.addItem(_('Windows / Linux'), False)
+        self.mode_cb.addItem(_('Mac (prohozené Alt a Win)'), True)
+        self.mode_cb.currentIndexChanged.connect(self._mode_changed)
+        mode_row.addWidget(self.mode_cb)
+        mode_row.addStretch()
+        v.addLayout(mode_row)
+        v.addWidget(QLabel(_('Na klávesnici: Fn + A = Windows / Linux, Fn + S = Mac (modré kontrolky 3× bliknou). '
+                             'Fn + Win zamyká klávesu Win (svítí modrá kontrolka) – to se do klávesnice neukládá '
+                             'a aplikace to nevidí.'), objectName='hint', wordWrap=True))
         b = self.factory_colors_btn = QPushButton(_('Tovární barvy kláves (WASD + šipky bíle)'))
         b.clicked.connect(self._factory_colors)
         v.addWidget(b, alignment=Qt.AlignmentFlag.AlignLeft)

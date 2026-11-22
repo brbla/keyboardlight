@@ -377,6 +377,21 @@ EN = {
 
     'Tento efekt je vždy duhový – barvu ani duhu nastavit nejde.': 'This effect is always rainbow – colour and rainbow cannot be set.',
 
+    'Režim kláves:': 'Key mode:',
+    'Windows / Linux': 'Windows / Linux',
+    'Mac (prohozené Alt a Win)': 'Mac (Alt and Win swapped)',
+    'Na klávesnici: Fn + A = Windows / Linux, Fn + S = Mac (modré kontrolky 3× bliknou). Fn + Win zamyká klávesu Win (svítí modrá kontrolka) – to se do klávesnice neukládá a aplikace to nevidí.': 'On the keyboard: Fn + A = Windows / Linux, Fn + S = Mac (the blue LEDs blink 3×). Fn + Win locks the Win key (blue LED lit) – that is not stored in the keyboard and the app cannot see it.',
+    'Režim kláves uložen: {mode}': 'Key mode saved: {mode}',
+    'ověření režimu kláves selhalo': 'verifying the key mode failed',
+
+    'Makro {n}': 'Macro {n}',
+    'ověření maker selhalo': 'verifying the macros failed',
+    'Načíst makra z klávesnice': 'Read macros from keyboard',
+    'Makra v klávesnici jsou stejná jako v aplikaci.': 'The macros in the keyboard are the same as in the app.',
+    'V klávesnici nejsou uložená žádná makra (např. po obnovení továrního nastavení).': 'No macros are stored in the keyboard (e.g. after a factory reset).',
+    'Makra v klávesnici (počet: {n}) se liší od maker v aplikaci. Nahradit jimi makra v aplikaci? (Klávesnice si nepamatuje názvy maker.)': "The keyboard holds {n} macros that differ from the macros in the app. Replace the app's macros with them? (The keyboard does not store macro names.)",
+    'Makra načtena z klávesnice: {n}': 'Macros read from the keyboard: {n}',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

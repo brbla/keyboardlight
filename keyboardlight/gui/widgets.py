@@ -29,22 +29,45 @@ def nav_only(combo: QComboBox) -> QComboBox:
 
 
 def stepped(slider, labels: list[str]):
-    """Slider with tick marks and a label under every step (for the few-step hardware sliders)."""
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWidgets import QHBoxLayout, QLabel, QSlider, QVBoxLayout, QWidget
+    """Slider with a short tick under every step, exactly where the handle stops; text only at both ends."""
+    from PyQt6.QtCore import QRectF, Qt
+    from PyQt6.QtGui import QColor, QPainter
+    from PyQt6.QtWidgets import QStyle, QStyleOptionSlider, QVBoxLayout, QWidget
+
+    class Ticks(QWidget):
+        def __init__(self):
+            super().__init__()
+            self.setFixedHeight(22)
+
+        def paintEvent(self, _ev):
+            opt = QStyleOptionSlider()
+            slider.initStyleOption(opt)
+            handle = slider.style().subControlRect(QStyle.ComplexControl.CC_Slider, opt,
+                                                  QStyle.SubControl.SC_SliderHandle, slider)
+            hw = handle.width() or 16
+            n = slider.maximum() - slider.minimum()
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            fg = self.palette().windowText().color()
+            dim = QColor(fg)
+            dim.setAlpha(150)
+            for i in range(n + 1):
+                x = hw / 2 + (slider.width() - hw) * i / max(1, n)
+                p.setPen(fg if slider.value() - slider.minimum() == i else dim)
+                p.drawLine(int(x), 1, int(x), 6)
+            p.setPen(dim)
+            f = p.font()
+            f.setPointSizeF(f.pointSizeF() * 0.85)
+            p.setFont(f)
+            p.drawText(QRectF(0, 7, self.width() / 2, 15), Qt.AlignmentFlag.AlignLeft, labels[0])
+            p.drawText(QRectF(self.width() / 2, 7, self.width() / 2, 15), Qt.AlignmentFlag.AlignRight, labels[-1])
+
     box = QWidget()
     v = QVBoxLayout(box)
     v.setContentsMargins(0, 0, 0, 0)
     v.setSpacing(0)
-    slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-    slider.setTickInterval(1)
     v.addWidget(slider)
-    row = QHBoxLayout()
-    row.setContentsMargins(4, 0, 4, 0)
-    for i, text in enumerate(labels):
-        lab = QLabel(text, objectName='hint')
-        lab.setAlignment(Qt.AlignmentFlag.AlignLeft if i == 0 else
-                         Qt.AlignmentFlag.AlignRight if i == len(labels) - 1 else Qt.AlignmentFlag.AlignHCenter)
-        row.addWidget(lab, 1)
-    v.addLayout(row)
+    ticks = Ticks()
+    v.addWidget(ticks)
+    slider.valueChanged.connect(lambda _v: ticks.update())
     return box

@@ -26,7 +26,7 @@ CMD_CFG_READ, CMD_CFG_WRITE = 0x05, 0x06
 CMD_KEYMAP_DEFAULT = 0x07
 CMD_KEYMAP_READ, CMD_KEYMAP_WRITE = 0x08, 0x09
 CMD_COLORS_READ, CMD_COLORS_WRITE = 0x0A, 0x0B
-CMD_MACRO_WRITE = 0x15
+CMD_MACRO_READ, CMD_MACRO_WRITE = 0x14, 0x15
 
 CFG_BLOCK = 0x40          # flash block that is erased by a write at offset 0
 KEYMAP_SIZE = 0x180       # 128 slots x 3 B
@@ -190,6 +190,26 @@ class Odyssey:
             if self._read(CMD_CFG_READ, CFG_BLOCK) != bytes(block):
                 raise OdysseyError(_('ověření nastavení podsvícení selhalo'))
 
+    # ---- key mode (Fn+A / Fn+S) -------------------------------------------
+    MODE_OFFSET = 0x1A          # 00 = Windows/Linux, ff = Mac (Win and Alt swapped) – verified with Fn+A / Fn+S
+
+    @staticmethod
+    def mac_mode_from_block(block: bytes) -> bool:
+        return block[Odyssey.MODE_OFFSET] == 0xFF
+
+    def read_mac_mode(self) -> bool:
+        return self.mac_mode_from_block(self.read_config_block())
+
+    def write_mac_mode(self, mac: bool) -> None:
+        with self.session():
+            block = bytearray(self._read(CMD_CFG_READ, CFG_BLOCK))
+            self._backup('config', bytes(block))
+            block[self.MODE_OFFSET] = 0xFF if mac else 0x00
+            # write at offset 0 erases the flash block -> always rewrite the whole block
+            self._write(CMD_CFG_WRITE, bytes(block))
+            if self._read(CMD_CFG_READ, CFG_BLOCK) != bytes(block):
+                raise OdysseyError(_('ověření režimu kláves selhalo'))
+
     # ---- per-key colours (effect 19) -------------------------------------
     def read_key_colors(self) -> list[tuple[int, int, int]]:
         with self.session():
@@ -224,8 +244,21 @@ class Odyssey:
                 raise OdysseyError(_('ověření mapy kláves selhalo'))
 
     # ---- macros (write only – the keyboard has no known read command) -----
+    MACRO_AREA = 0x800
+
+    def read_macro_block(self) -> bytes:
+        """Raw macro block as stored in the keyboard (its header says how long it is)."""
+        with self.session():
+            head = self._read(CMD_MACRO_READ, 0x10)
+            total = head[2] | head[3] << 8
+            if head[:2] != b'\xaa\x55' or not 0x10 <= total <= self.MACRO_AREA:
+                return head
+            return self._read(CMD_MACRO_READ, total)
+
     def write_macros(self, block: bytes) -> None:
         from keyboardlight.devices.odyssey_macros import mark_written
         with self.session():
             self._write(CMD_MACRO_WRITE, block)
+            if self._read(CMD_MACRO_READ, len(block)) != block:
+                raise OdysseyError(_('ověření maker selhalo'))
         mark_written(block)

@@ -1,7 +1,7 @@
 """Odyssey macros: data model, binary block encoding and local storage.
 
-The keyboard cannot report its macros back (no known read command), so the app keeps the
-source of truth in ~/.config/keyboardlight/odyssey_macros.json and writes the whole block.
+The app keeps the macros (with their names) in ~/.config/keyboardlight/odyssey_macros.json and writes the
+whole block; the keyboard can report the block back (command 0x14, verified), names are not stored there.
 Format: docs/odyssey-protocol.md, section "Macros".
 """
 from __future__ import annotations
@@ -67,6 +67,31 @@ def build_block(macros: list[Macro]) -> bytes:
     total = start + len(body)
     head = struct.pack('<HHH', 0x55AA, total, n).ljust(0x10, b'\0')
     return head + b''.join(struct.pack('<H', o) for o in offsets) + body
+
+
+def parse_block(block: bytes, names: list[str] | None = None) -> list[Macro] | None:
+    """Inverse of build_block. None if the area does not hold a valid macro block (e.g. after a factory reset)."""
+    if len(block) < 0x10 or struct.unpack_from('<H', block)[0] != 0x55AA:
+        return None
+    total, n = struct.unpack_from('<HH', block, 2)
+    if total > len(block) or 0x10 + 2 * n > total:
+        return None
+    macros = []
+    for i in range(n):
+        off = struct.unpack_from('<H', block, 0x10 + 2 * i)[0]
+        if off + 4 > total:
+            return None
+        count = struct.unpack_from('<H', block, off)[0]
+        evs = []
+        for j in range(min(count, MAX_EVENTS)):
+            p = off + 4 + 4 * j
+            if p + 4 > total:
+                return None
+            delay, t, code = struct.unpack_from('<HBB', block, p)
+            evs.append(MacroEvent(type=t & 0x7F, code=code, down=bool(t & 0x80), delay=delay))
+        name = names[i] if names and i < len(names) else _('Makro {n}').format(n=i + 1)
+        macros.append(Macro(name, evs))
+    return macros
 
 
 # ---- text -> events -----------------------------------------------------------

@@ -152,7 +152,7 @@ event packer 0x4472b0, key-assignment builder 0x4105d0) and verified on the devi
 
 Commands used by the vendor app: 01 02 03 05 06 07 09 0b **15** 17 1a 1b 1c aa.
 `0x15` = write macro block (0x38-byte chunks from offset 0). The app never reads macros back
-(macros live in the app profile); a read command is unknown (0x14 untested on purpose).
+(macros live in the app profile); **read = 0x14** (verified 2026-11-22: an unassigned test macro written with 0x15 read back identically; the app now verifies every macro write and can import the block).
 `0x17` = write "ShootData" (mouse fire key), `0x1a`/`0x1b` = write/read a 0x80 B table (0x1b reads an identity
 table 0x00–0x59 + 16 bytes; meaning unknown).
 `0xaa` = status ping sent by the vendor app before writes; reply data[0] = `ff` over the 2.4 GHz receiver, `00` over the USB cable (link-type flag, no battery info).
@@ -198,7 +198,11 @@ https://data.fast.eu/manual/45/45021093/45021093-im.pdf) + own tests (✔ = veri
 | Fn + Space | rainbow on / off (0x05) | **undocumented** ✔ |
 | Fn + 1 / 2 / 3 | switch Bluetooth device; hold 3 s = pairing (LED flashes fast) | manual |
 | Fn + G (hold 3 s) | pair 2.4 GHz receiver | manual (CZ) |
-| Fn + Enter, PgUp, PgDn, End | nothing visible | tested |
+| Fn + Enter, PgUp, PgDn, End | nothing visible (PgUp/PgDn are sent as normal keys) | tested |
+| Fn + A | Windows/Linux mode – config byte **0x1A = 00**; the two blue status LEDs blink 3× | **undocumented** ✔ |
+| Fn + S | Mac mode – **0x1A = FF**: physical Win sends Alt, physical Alt sends Win; LEDs blink 3× | **undocumented** ✔ |
+| Fn + Win | Win-key lock (blue LED between the keys); not stored in the config area | **undocumented** ✔ |
+| Fn + W | nothing (no WASD/arrow swap) | tested |
 
 Hardware: 75 % layout, 82 keys, rotary knob, switch on the bottom: 2.4G (left) / BT (middle) / TYP-C wired (right).
 Backlight turns off after 3 min idle on battery; sleep after 10 min.
@@ -229,3 +233,21 @@ No description found online (also used by Redragon/Glorious-style firmwares, onl
 18 centre transition is always rainbow (the app hides the rainbow toggle and always writes rainbow on = rings
 from the centre out/in by direction; rainbow off = rainbow flowing back
 and forth; direction works in both (user-verified).
+
+## 30 fps re-test (2026-11-22, camera clips)
+- 16 scan: slanted line sweeps back and forth; speed works (≈10 / 21 / 38 px/s at speed byte 4 / 2 / 0).
+- 10 stars: speed works (twinkle rate rises steadily from byte 4 to 1; byte 0 too fast for a 3 fps camera).
+- 3 serpentine: direction ff plays the same animation backwards (time-reversed hue sequence).
+
+## Vendor app (DefaultData/Keyboard.json, exe strings) – hints for the unknown config bytes 0x0A–0x1F
+- `SystemStages`: Key6Flag (6-key / n-key rollover), PollingRate, Repeat (16), RepeatDelay, WFlag (WASD/arrows swap?),
+  WinFlag (Win-key lock).
+- `LightInfo`: Light, Speed, MultiColor, SelectItem, ZZCCLedMode (extra parameter of effect 17 "Surmount"), OldLedmode.
+- Direction labels in the UI strings: left/right, up/down, inside→outside / outside→inside, clockwise/anticlockwise.
+Mapping of these to bytes not verified (would need Fn shortcuts or a capture; never let the vendor app write).
+- Reactive 7 / 8 / 9 (30 fps clips while typing): speed works – a key's glow lasts ≈0.25–0.35 s at speed byte 4 and
+  ≈0.09 s at byte 0. Direction: no clear difference (9 lights almost the whole row at once); kept hidden.
+
+## Factory reset (Fn + Esc held ~6 s, tested by the user 2026-11-22)
+Resets lighting to wave + rainbow, per-key colours to factory (WASD + arrows white), config bytes 0x12 01→00 and
+0x1B 06→00 (meaning unknown), macro area to all zeros (no header). Keymap and key mode (0x1A) were default already.
