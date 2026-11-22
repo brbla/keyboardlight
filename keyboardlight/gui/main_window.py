@@ -104,8 +104,9 @@ class MainWindow(QMainWindow):
         sl.addSpacing(10)
         self.nav = QButtonGroup(self)
         self.pages = QStackedWidget()
-        for i, name in enumerate([_('💡  Podsvícení'), _('⌨  Klávesy'), _('⏺  Makra'), _('⚙  Další'),
-                                  _('🅰  AULA')]):
+        # button ids stay 0..4 (pages); the AULA settings button (id 4) is shown first in the menu
+        for i, name in [(4, _('🎛  Nastavení')), (0, _('💡  Podsvícení')), (1, _('⌨  Klávesy')), (2, _('⏺  Makra')),
+                        (3, _('⚙  Další'))]:
             b = QPushButton(name, objectName='nav', checkable=True)
             b.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self.nav.addButton(b, i)

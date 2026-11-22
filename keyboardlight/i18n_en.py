@@ -264,7 +264,7 @@ EN = {
     'Klávesnice AULA nenalezena.': 'AULA keyboard not found.',
     'Klávesnice AULA nevrátila informace o firmwaru.': 'The AULA keyboard did not return firmware information.',
 
-    '🅰  AULA': '🅰  AULA',
+    '🎛  Nastavení': '🎛  Settings',
     'Podsvícení': 'Lighting',
     '– nepřipojeno –': '– not connected –',
     'Spínače': 'Switches',
