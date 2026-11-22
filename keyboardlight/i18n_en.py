@@ -248,6 +248,22 @@ EN = {
     'Reaktivní efekty (Vlnky, Reakce na stisk…) reagují na skutečné stisky kláves. Pište sem – nic se tím nepřepne.':
         'Reactive effects (Ripples, Reactive…) react to real key presses. Type here – nothing gets switched.',
 
+    'Zkontrolovat aktualizace firmwaru': 'Check for firmware updates',
+    'Otevřít oficiální stažení': 'Open official download',
+    'Zjišťuji verze firmwaru…': 'Checking firmware versions…',
+    'Yenkee Odyssey: výrobce firmware veřejně nenabízí – aktualizace jsou jen online v jeho aplikaci pro Windows.':
+        'Yenkee Odyssey: the vendor does not publish firmware – updates are only done online in its Windows app.',
+    '{name}: nainstalováno {ver}.': '{name}: installed {ver}.',
+    'Výrobce nabízí novější {ver} – aktualizujte oficiálním nástrojem ve Windows (ne přes Wine), klávesnici na kabelu a nic během aktualizace neodpojujte.':
+        'The vendor offers a newer {ver} – update with the official tool on Windows (not Wine), keyboard on the '
+        'cable, and do not unplug anything during the update.',
+    'Výrobce nabízí {ver} – aktualizace není potřeba.': 'The vendor offers {ver} – no update needed.',
+    'Výrobce pro tento model firmware nenabízí.': 'The vendor offers no firmware for this model.',
+    'Kontrola online se nepovedla: {err}': 'Online check failed: {err}',
+    'Není připojená žádná podporovaná klávesnice.': 'No supported keyboard is connected.',
+    'Klávesnice AULA nenalezena.': 'AULA keyboard not found.',
+    'Klávesnice AULA nevrátila informace o firmwaru.': 'The AULA keyboard did not return firmware information.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

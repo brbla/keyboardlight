@@ -5,8 +5,8 @@ import colorsys
 import json
 import os
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtGui import QColor, QDesktopServices
 from PyQt6.QtWidgets import (QButtonGroup, QCheckBox, QColorDialog, QComboBox, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QMainWindow, QMessageBox, QDialog, QDialogButtonBox, QLineEdit, QPushButton, QRadioButton, QSlider, QSpinBox, QStackedWidget,
                              QVBoxLayout, QWidget)
@@ -15,7 +15,7 @@ from keyboardlight.devices.odyssey import BACKUP_DIR, Lighting, Odyssey, Odyssey
 from keyboardlight.devices.odyssey_layout import (CONSUMER, DISABLED_ENTRY, EFFECT_CUSTOM, EFFECTS, EVDEV_MODIFIER,
                                                   EVDEV_TO_HID, FN_SLOT, HID_NAMES, KEY_BY_SLOT, KEYS, MODIFIERS,
                                                   PRESET_COLORS, consumer_entry, describe, keyboard_entry)
-from keyboardlight import battery, i18n, kde_shortcuts, profiles
+from keyboardlight import battery, firmware, i18n, kde_shortcuts, profiles
 from keyboardlight.devices import odyssey_macros
 from keyboardlight.devices.odyssey_layout import EFFECT_OFF, NO_SPEED, WITH_DIRECTION, macro_entry
 from keyboardlight.devices.odyssey_macros import MODES
@@ -868,6 +868,19 @@ class MainWindow(QMainWindow):
         v.addWidget(QLabel(_('Klávesnice nesvítí, i když je vše nastavené (ani Fn + Del nepomáhá)? Firmware se po '
                              'přepnutí z baterie na kabel někdy zasekne: odpojte kabel, přepněte přepínač na 2.4G '
                              'a zpět na TYP-C a kabel znovu zapojte.'), objectName='hint', wordWrap=True))
+        fw_row = QHBoxLayout()
+        self.fw_btn = QPushButton(_('Zkontrolovat aktualizace firmwaru'))
+        self.fw_btn.clicked.connect(self._check_firmware)
+        fw_row.addWidget(self.fw_btn)
+        self.fw_link = QPushButton(_('Otevřít oficiální stažení'))
+        self.fw_link.setVisible(False)
+        self.fw_link.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self._fw_url)))
+        fw_row.addWidget(self.fw_link)
+        fw_row.addStretch()
+        v.addLayout(fw_row)
+        self.fw_label = QLabel('', objectName='hint', wordWrap=True)
+        self.fw_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        v.addWidget(self.fw_label)
         lang_row = QHBoxLayout()
         lang_row.addWidget(QLabel('Jazyk / Language:'))
         self.lang_cb = QComboBox()
@@ -902,6 +915,59 @@ class MainWindow(QMainWindow):
         self._update_knob_btn()
         self.statusBar().showMessage(_('Ctrl + knoflík teď mění jas obrazovky') if on
                                      else _('Ctrl + knoflík už jas obrazovky nemění'), 4000)
+
+    def _check_firmware(self):
+        import threading
+        self.fw_btn.setEnabled(False)
+        self.fw_link.setVisible(False)
+        self.fw_label.setText(_('Zjišťuji verze firmwaru…'))
+        self._fw_result = None
+
+        def work():
+            lines, url = [], ''
+            if self.dev:
+                lines.append(_('Yenkee Odyssey: výrobce firmware veřejně nenabízí – aktualizace jsou jen online '
+                               'v jeho aplikaci pro Windows.'))
+            try:
+                from keyboardlight.devices.aula import Aula, AulaError
+                a = Aula()
+                try:
+                    info = a.info()
+                finally:
+                    a.close()
+                state, offer = firmware.check_aula(info)
+                line = _('{name}: nainstalováno {ver}.').format(name=info.name, ver=info.version) + ' '
+                if state == 'newer':
+                    line += _('Výrobce nabízí novější {ver} – aktualizujte oficiálním nástrojem ve Windows '
+                              '(ne přes Wine), klávesnici na kabelu a nic během aktualizace neodpojujte.').format(
+                        ver=offer.version)
+                    url = offer.url
+                elif state == 'current':
+                    line += _('Výrobce nabízí {ver} – aktualizace není potřeba.').format(ver=offer.version)
+                else:
+                    line += _('Výrobce pro tento model firmware nenabízí.')
+                lines.append(line)
+            except AulaError:
+                pass
+            except OSError as e:
+                lines.append(_('Kontrola online se nepovedla: {err}').format(err=e))
+            if not lines:
+                lines.append(_('Není připojená žádná podporovaná klávesnice.'))
+            self._fw_result = ('\n'.join(lines), url)
+
+        threading.Thread(target=work, daemon=True).start()
+        self._fw_timer = QTimer(self, interval=300, timeout=self._firmware_done)
+        self._fw_timer.start()
+
+    def _firmware_done(self):
+        if self._fw_result is None:
+            return
+        self._fw_timer.stop()
+        text, url = self._fw_result
+        self.fw_label.setText(text)
+        self._fw_url = url
+        self.fw_link.setVisible(bool(url))
+        self.fw_btn.setEnabled(True)
 
     def _language_changed(self):
         code = self.lang_cb.currentData()
