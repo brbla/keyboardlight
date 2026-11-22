@@ -311,6 +311,25 @@ EN = {
         'On first connection the app saves the keyboard\'s original settings. “Restore from backup” writes back the '
         'lighting, key colours and switch settings (actuation, rapid trigger); other settings (SOCD…) are never changed.',
 
+    'Klikni na klávesy (Ctrl = přidat/odebrat, tažením malování), pak vyber barvu:': 'Click keys (Ctrl = add/remove, drag to paint), then pick a colour:',
+    'Jas vybraných': 'Brightness of selected',
+    'Vyhrává poslední stisk (první se přeruší)': 'Last press wins (the first key is interrupted)',
+    'Klávesa 1 přeruší klávesu 2': 'Key 1 interrupts key 2',
+    'Klávesa 2 přeruší klávesu 1': 'Key 2 interrupts key 1',
+    'Vyhrává první stisk (pozdější se ignoruje)': 'First press wins (the later key is ignored)',
+    'SOCD – co se stane, když držíš dvě protichůdné klávesy naráz (např. A a D ve hrách).':
+        'SOCD – what happens when you hold two opposite keys at once (e.g. A and D in games).',
+    'SOCD zapnuto': 'SOCD enabled',
+    'Uložit do klávesnice': 'Save to keyboard',
+    'Klávesa 1': 'Key 1', 'Klávesa 2': 'Key 2', 'Režim': 'Mode',
+    'Přidat pár': 'Add pair', 'Odebrat vybraný': 'Remove selected',
+    'SOCD umí nejvýše 20 párů.': 'SOCD supports at most 20 pairs.',
+    'SOCD uloženo do klávesnice': 'SOCD saved to the keyboard',
+    'ověření nastavení SOCD selhalo': 'verifying the SOCD settings failed',
+    'Při prvním připojení aplikace sama uloží původní nastavení klávesnice. „Vrátit nastavení ze zálohy“ zapíše zpět podsvícení, barvy kláves, spínače (bod sepnutí, rapid trigger) a SOCD.':
+        'On first connection the app saves the keyboard\'s original settings. “Restore from backup” writes back the '
+        'lighting, key colours, switch settings (actuation, rapid trigger) and SOCD.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

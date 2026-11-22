@@ -21,7 +21,7 @@ kláves, přemapování kláves, makra a profily. Bez Windows a bez Wine, vše s
 | **Macros** | record from the keyboard, type text (aware of your system keyboard layout via libxkbcommon), mouse clicks, delays; play once / while held / toggle / N times |
 | **Profiles** | save named presets (e.g. *Day*, *Night*) and switch with one click or `keyboardlight --profile Night` (bind it to a hotkey or a timer) |
 | **Knob** | the knob always changes volume (fixed in firmware); one click under *More* makes **Ctrl + knob** change the screen brightness (KDE Plasma) |
-| **AULA WIN68 HE** | lighting effects, per-key actuation point and rapid trigger (sensitivity), automatic backup of the original settings and one-click restore |
+| **AULA WIN68 HE** | lighting effects, per-key colours, per-key actuation point and rapid trigger (sensitivity), SOCD pairs, automatic backup of the original settings and one-click restore |
 | **Battery** | battery level shown in the app while the keyboard is connected over Bluetooth (BLE Battery Service) |
 | **Languages** | English and Czech (follows the system language, switchable under *More*) |
 | **Safety** | every write is verified by reading it back; each area is backed up before the first write (`~/.local/share/keyboardlight/backups/`) |
@@ -80,7 +80,7 @@ keyboardlight --profile Night        # apply a saved profile without opening the
 | Yenkee YKB 30 Odyssey – 2.4 GHz USB receiver | `320f:5088` | ✅ supported |
 | Yenkee YKB 30 Odyssey – Bluetooth | – | ❌ no configuration channel (settings stored in the keyboard still apply) |
 | Evision Kreo Hive and other boards with `320f:5055` | `320f:5055` | likely works (same OEM board), untested |
-| AULA WIN68 HE (Hall-effect, Standard edition) | `2e3c:c365` | ✅ lighting effects, per-key actuation point + rapid trigger, automatic backup + restore of the original settings |
+| AULA WIN68 HE (Hall-effect, Standard edition) | `2e3c:c365` | ✅ lighting effects, per-key colours, per-key actuation point + rapid trigger, SOCD, automatic backup + restore of the original settings |
 
 ## Troubleshooting
 

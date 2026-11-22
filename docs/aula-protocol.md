@@ -54,3 +54,13 @@ Per-key block read reply: the length byte says 4 but the block is 12 bytes: `[05
 ## Backup / restore (app)
 `keyboardlight.devices.aula.full_backup()` (read-only, same reads as the official driver) and `restore()`
 (per-key colours, then lighting and side strip, each verified by read-back). Actuation is never written yet.
+
+## SOCD – `24` (verified on WIN68 HE; layout from AulaControl)
+- Read pairs: `24 01` → 2 packets `[24 01 00 i 28]` + 10 slots × `[enabled][mode][HID key1][HID key2]`.
+- Read switch: `24 02` → data[0] = 1 on / 0 off.
+- Write pairs: `24 00 00 [packet 0|1] 28` + 10 slots (max 20 pairs, unused slots zero); switch: `24 03 00 00 01 [0|1]`.
+- Modes: 0 last press wins (first is interrupted), 1 key1 interrupts key2, 2 key2 interrupts key1, 3 first press wins.
+- Son's original: SOCD on, A↔D and W↔S, mode 0.
+
+Not decoded: DKS (dynamic keystrokes), key remap / layers – would need a capture of the official driver
+(hed.aulacn.com is not reachable from our network).

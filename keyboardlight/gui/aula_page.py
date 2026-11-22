@@ -7,10 +7,11 @@ import time
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+from PyQt6.QtWidgets import (QAbstractItemView, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QTableWidget, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QMessageBox, QPushButton, QSlider, QTabWidget, QVBoxLayout, QWidget)
 
 from keyboardlight.devices import aula_layout as L
+from keyboardlight.devices.odyssey_layout import HID_NAMES, PRESET_COLORS
 from keyboardlight.devices.aula import BACKUP_DIR, Aula, AulaError, full_backup, restore
 from keyboardlight.gui.keyboard_widget import KeyboardWidget
 from keyboardlight.gui.widgets import nav_only
@@ -26,7 +27,10 @@ class AulaPage(QWidget):
         self.status = status                      # callable(str) -> show a status-bar message
         self.dev: Aula | None = None
         self.light = bytearray()
-        self.act: dict[int, float | None] = {}
+        self.act: dict[int, tuple | None] = {}
+        self.colors = bytearray(Aula.COLORS_LEN)
+        self.socd: tuple[bool, list] = (False, [])
+        self._colors_timer = QTimer(self, singleShot=True, interval=700, timeout=self._write_colors)
         self._loading = False
         self._timer = QTimer(self, singleShot=True, interval=400, timeout=self._write_light)
 
@@ -39,6 +43,7 @@ class AulaPage(QWidget):
                                 'QTabBar::tab:selected { background: #23474b; color: #18d6d6; }')
         self.tabs.addTab(self._build_light(), _('Podsvícení'))
         self.tabs.addTab(self._build_act(), _('Spínače'))
+        self.tabs.addTab(self._build_socd(), 'SOCD')
         self.tabs.addTab(self._build_backup(), _('Záloha'))
         self.tabs.currentChanged.connect(lambda _i: self._refresh_kbd())
         v.addWidget(self.tabs, 2)
@@ -53,6 +58,8 @@ class AulaPage(QWidget):
             info = self.dev.info()
             self.light = bytearray(self.dev.read_lighting_raw())
             self.act = {k.slot: Aula.decode_actuation(self.dev.read_key_block(k.slot)) for k in L.KEYS}
+            self.colors = bytearray(self.dev.read_custom_colors(0))
+            self.socd = self.dev.read_socd()
         except (AulaError, OSError) as e:
             self.status(str(e))
             if self.dev:
@@ -62,6 +69,7 @@ class AulaPage(QWidget):
         self.info_lbl.setText(_('{name} – firmware {ver} ({build})').format(name=info.name, ver=info.version,
                                                                           build=info.build))
         self._load_light_ui()
+        self._load_socd_ui()
         self._refresh_kbd()
         self._ensure_first_backup()
         return True
@@ -107,9 +115,32 @@ class AulaPage(QWidget):
         row.addWidget(self.c2)
         row.addStretch()
         g.addLayout(row, 1, 2)
-        self.custom_hint = QLabel(_('Vlastní barvy jednotlivých kláves zůstávají tak, jak jsou uložené v klávesnici '
-                                    '(úprava po klávesách přibude).'), objectName='hint', wordWrap=True)
-        g.addWidget(self.custom_hint, 2, 2, 2, 1)
+        self.custom_box = QFrame()
+        cb = QGridLayout(self.custom_box)
+        cb.setContentsMargins(0, 0, 0, 0)
+        cb.addWidget(QLabel(_('Klikni na klávesy (Ctrl = přidat/odebrat, tažením malování), pak vyber barvu:'),
+                            objectName='hint', wordWrap=True), 0, 0, 1, 7)
+        for i, col in enumerate(PRESET_COLORS):
+            b = QPushButton(objectName='swatch')
+            b.setStyleSheet(f'background: {col};')
+            b.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            b.clicked.connect(lambda _c=False, c=col: self._paint(QColor(c)))
+            cb.addWidget(b, 1 + i // 7, i % 7)
+        more = QPushButton(_('Jiná barva…'))
+        more.clicked.connect(lambda: self._paint(QColorDialog.getColor(QColor('#ffffff'), self)))
+        cb.addWidget(more, 3, 0, 1, 3)
+        for text, fn, col in ((_('Vybrat vše'), lambda: self.kbd.set_selected({k.slot for k in L.KEYS}), 3),
+                              (_('Zhasnout vybrané'), lambda: self._paint(QColor(0, 0, 0)), 5)):
+            b = QPushButton(text)
+            b.clicked.connect(fn)
+            cb.addWidget(b, 3, col, 1, 2)
+        cb.addWidget(QLabel(_('Jas vybraných')), 4, 0, 1, 2)
+        self.key_bright = QSlider(Qt.Orientation.Horizontal, minimum=0, maximum=100, value=100)
+        self.key_bright.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.key_bright.valueChanged.connect(self._key_brightness)
+        cb.addWidget(self.key_bright, 4, 2, 1, 5)
+        g.addWidget(self.custom_box, 1, 2, 4, 1)
+        self.kbd.selectionChanged.connect(self._color_selection)
         nav_only(self.effect_cb)
         for wdg in (self.bright, self.speed, self.rainbow):
             wdg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -139,7 +170,8 @@ class AulaPage(QWidget):
             wdg.setVisible(eff not in NO_SPEED)
         for wdg in (self.c1, self.c2, self.rainbow):
             wdg.setVisible(eff not in NO_COLOR)
-        self.custom_hint.setVisible(eff in NO_COLOR)
+        self.custom_box.setVisible(eff in NO_COLOR)
+        self._refresh_kbd()
         if len(self.light) >= 9:
             for btn, off in ((self.c1, 3), (self.c2, 6)):
                 r, g_, b = self.light[off:off + 3]
@@ -169,6 +201,135 @@ class AulaPage(QWidget):
             self.status(_('Podsvícení uloženo do klávesnice'))
         except (AulaError, OSError) as e:
             QMessageBox.warning(self, 'AULA', str(e))
+
+    # ------------------------------------------------------------------ per-key colours
+    def _key_rgb(self, slot):
+        return tuple(self.colors[slot * 3:slot * 3 + 3])
+
+    def _paint(self, c: QColor):
+        if not c.isValid() or not self.kbd.selected:
+            self.status(_('Nejdřív vyber klávesy na obrázku'))
+            return
+        k = self.key_bright.value() / 100
+        for slot in self.kbd.selected:
+            self.colors[slot * 3:slot * 3 + 3] = bytes(round(x * k) for x in (c.red(), c.green(), c.blue()))
+            self._hues[slot] = (c.red(), c.green(), c.blue())
+        self._colors_changed()
+
+    _hues: dict = {}
+
+    def _key_brightness(self, v: int):
+        if not self.kbd.selected:
+            return
+        for slot in self.kbd.selected:
+            cur = self._key_rgb(slot)
+            hue = self._hues.get(slot)
+            if hue is None and any(cur):
+                m = max(cur)
+                hue = self._hues[slot] = tuple(round(x * 255 / m) for x in cur)
+            if hue:
+                self.colors[slot * 3:slot * 3 + 3] = bytes(round(x * v / 100) for x in hue)
+        self._colors_changed()
+
+    def _color_selection(self):
+        if self.tabs.currentIndex() != 0 or not self.kbd.selected:
+            return
+        lit = [max(self._key_rgb(s_)) for s_ in self.kbd.selected if any(self._key_rgb(s_))]
+        if lit:
+            self.key_bright.blockSignals(True)
+            self.key_bright.setValue(round(max(lit) / 255 * 100))
+            self.key_bright.blockSignals(False)
+
+    def _colors_changed(self):
+        self._refresh_kbd()
+        self._colors_timer.start()
+
+    def _write_colors(self):
+        if not self.dev:
+            return
+        try:
+            self.dev.write_custom_colors(bytes(self.colors), 0)
+            self.light = bytearray(self.dev.read_lighting_raw())
+            self.status(_('Barvy kláves uloženy do klávesnice'))
+        except (AulaError, OSError) as e:
+            QMessageBox.warning(self, 'AULA', str(e))
+
+    # ------------------------------------------------------------------ SOCD
+    SOCD_MODE_NAMES = [_('Vyhrává poslední stisk (první se přeruší)'), _('Klávesa 1 přeruší klávesu 2'),
+                       _('Klávesa 2 přeruší klávesu 1'), _('Vyhrává první stisk (pozdější se ignoruje)')]
+
+    def _build_socd(self):
+        w = QFrame(objectName='panel')
+        v = QVBoxLayout(w)
+        v.addWidget(QLabel(_('SOCD – co se stane, když držíš dvě protichůdné klávesy naráz (např. A a D ve hrách).'),
+                           objectName='hint', wordWrap=True))
+        self.socd_on = QCheckBox(_('SOCD zapnuto'))
+        v.addWidget(self.socd_on)
+        self.socd_table = QTableWidget(0, 3)
+        self.socd_table.setHorizontalHeaderLabels([_('Klávesa 1'), _('Klávesa 2'), _('Režim')])
+        self.socd_table.horizontalHeader().setStretchLastSection(True)
+        self.socd_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.socd_table.setStyleSheet('QTableWidget { background: #163236; gridline-color: #2f5a5f; }'
+                                      'QHeaderView::section { background: #1d3c40; color: #e6f2f2; border: none; }')
+        v.addWidget(self.socd_table, 1)
+        row = QHBoxLayout()
+        for text, fn in ((_('Přidat pár'), lambda: self._socd_add_row(0, 0x04, 0x07)),
+                         (_('Odebrat vybraný'), self._socd_remove),
+                         (_('Uložit do klávesnice'), self._socd_save)):
+            b = QPushButton(text)
+            b.clicked.connect(fn)
+            row.addWidget(b)
+        row.addStretch()
+        v.addLayout(row)
+        return w
+
+    def _key_combo(self, usage):
+        cb = QComboBox()
+        for u, name in sorted(HID_NAMES.items()):
+            cb.addItem(name, u)
+        i = cb.findData(usage)
+        if i < 0:
+            cb.addItem(f'HID {usage:#04x}', usage)
+            i = cb.count() - 1
+        cb.setCurrentIndex(i)
+        return nav_only(cb)
+
+    def _socd_add_row(self, mode, k1, k2):
+        if self.socd_table.rowCount() >= 20:
+            QMessageBox.information(self, 'SOCD', _('SOCD umí nejvýše 20 párů.'))
+            return
+        r = self.socd_table.rowCount()
+        self.socd_table.insertRow(r)
+        self.socd_table.setCellWidget(r, 0, self._key_combo(k1))
+        self.socd_table.setCellWidget(r, 1, self._key_combo(k2))
+        m = QComboBox()
+        for i, name in enumerate(self.SOCD_MODE_NAMES):
+            m.addItem(name, i)
+        m.setCurrentIndex(mode if 0 <= mode < len(self.SOCD_MODE_NAMES) else 0)
+        self.socd_table.setCellWidget(r, 2, nav_only(m))
+
+    def _socd_remove(self):
+        for r in sorted({i.row() for i in self.socd_table.selectedIndexes()}, reverse=True):
+            self.socd_table.removeRow(r)
+
+    def _load_socd_ui(self):
+        on, pairs = self.socd
+        self.socd_on.setChecked(on)
+        self.socd_table.setRowCount(0)
+        for mode, k1, k2 in pairs:
+            self._socd_add_row(mode, k1, k2)
+
+    def _socd_save(self):
+        if not self.dev:
+            return
+        pairs = [(self.socd_table.cellWidget(r, 2).currentData(), self.socd_table.cellWidget(r, 0).currentData(),
+                  self.socd_table.cellWidget(r, 1).currentData()) for r in range(self.socd_table.rowCount())]
+        try:
+            self.dev.write_socd(self.socd_on.isChecked(), pairs)
+            self.socd = self.dev.read_socd()
+            self.status(_('SOCD uloženo do klávesnice'))
+        except (AulaError, OSError) as e:
+            QMessageBox.warning(self, 'SOCD', str(e))
 
     # ------------------------------------------------------------------ actuation
     def _build_act(self):
@@ -247,8 +408,20 @@ class AulaPage(QWidget):
 
     def _refresh_kbd(self):
         self.kbd.colors, self.kbd.labels, self.kbd.marked = {}, {}, set()
-        self.kbd.multi = self.tabs.currentIndex() == 1
-        if self.tabs.currentIndex() == 1:
+        tab = self.tabs.currentIndex()
+        custom = bool(self.light) and self.light[0] in NO_COLOR
+        self.kbd.multi = tab == 1 or (tab == 0 and custom)
+        if tab == 0 and len(self.light) >= 11:
+            for k in L.KEYS:
+                if custom:
+                    rgb = self._key_rgb(k.slot)
+                    if any(rgb):
+                        self.kbd.colors[k.slot] = QColor(*rgb)
+                elif self.light[2] > 0 and not self.light[10]:
+                    self.kbd.colors[k.slot] = QColor(*self.light[3:6])
+            self.kbd.update()
+            return
+        if tab == 1:
             for k in L.KEYS:
                 cur = self.act.get(k.slot)
                 if cur:
@@ -263,8 +436,8 @@ class AulaPage(QWidget):
         v = QVBoxLayout(w)
         v.addWidget(QLabel(_('Záloha a obnova'), objectName='title'))
         v.addWidget(QLabel(_('Při prvním připojení aplikace sama uloží původní nastavení klávesnice. „Vrátit '
-                             'nastavení ze zálohy“ zapíše zpět podsvícení, barvy kláves a spínače (bod sepnutí, '
-                             'rapid trigger); ostatní nastavení (SOCD…) aplikace nemění.'),
+                             'nastavení ze zálohy“ zapíše zpět podsvícení, barvy kláves, spínače (bod sepnutí, '
+                             'rapid trigger) a SOCD.'),
                            objectName='hint', wordWrap=True))
         row = QHBoxLayout()
         b = QPushButton(_('Zálohovat teď'))
@@ -306,6 +479,10 @@ class AulaPage(QWidget):
             QMessageBox.warning(self, 'AULA', str(e))
             return
         self.light = bytearray(self.dev.read_lighting_raw())
+        self.colors = bytearray(self.dev.read_custom_colors(0))
+        self.act = {k.slot: Aula.decode_actuation(self.dev.read_key_block(k.slot)) for k in L.KEYS}
+        self.socd = self.dev.read_socd()
         self._load_light_ui()
+        self._load_socd_ui()
         QMessageBox.information(self, 'AULA', _('Obnoveno: {what}').format(what=', '.join(done)) if done
                                 else _('Klávesnice už odpovídá záloze – nebylo co měnit.'))

@@ -148,6 +148,41 @@ class Aula:
         return (bool(block[1] & 1), ((block[6] << 8) | block[2]) / 100, ((block[7] << 8) | block[3]) / 100,
                 block[4] / 100, block[5] / 100)
 
+    # ---- SOCD (cmd 24, "Prcs" in the official driver) ------------------------------------------
+    # read 24 01 -> 2 packets [24 01 00 i 28] + 10 slots × [enabled][mode][hid1][hid2]; 24 02 -> data[0] = on/off
+    # write 24 00 00 i 28 + 10 slots (2 packets, max 20 pairs); 24 03 00 00 01 [0/1] = global switch
+    SOCD_MODES = 4
+
+    def read_socd(self) -> tuple[bool, list[tuple[int, int, int]]]:
+        pairs = []
+        for rep in self.xfer(bytes([0x24, 0x01])):
+            if rep[:2] != b'\x24\x01' or len(rep) < 45:
+                continue
+            for slot in range(10):
+                en, mode, k1, k2 = rep[5 + 4 * slot:9 + 4 * slot]
+                if en == 1:
+                    pairs.append((mode, k1, k2))
+        on = False
+        for rep in self.xfer(bytes([0x24, 0x02])):
+            if rep[:2] == b'\x24\x02' and len(rep) > 5:
+                on = rep[5] == 1
+        return on, pairs
+
+    def write_socd(self, on: bool, pairs: list[tuple[int, int, int]]) -> None:
+        if len(pairs) > 20:
+            raise AulaError(_('SOCD umí nejvýše 20 párů.'))
+        for packet in range(2):
+            data = bytearray(40)
+            for slot in range(10):
+                i = packet * 10 + slot
+                if i < len(pairs):
+                    mode, k1, k2 = pairs[i]
+                    data[4 * slot:4 * slot + 4] = bytes([1, mode, k1, k2])
+            self.xfer(bytes([0x24, 0x00, 0x00, packet, 0x28]) + bytes(data), first=0.3)
+        self.xfer(bytes([0x24, 0x03, 0x00, 0x00, 0x01, 1 if on else 0]), first=0.3)
+        if self.read_socd() != (on, list(pairs)):
+            raise AulaError(_('ověření nastavení SOCD selhalo'))
+
     # ---- per-key custom colours (effect 10), 0x18c-byte buffer, index*3 = R G B --------------
     COLORS_LEN, COLORS_CHUNK = 0x18C, 0x36
 
@@ -181,6 +216,17 @@ def backup_areas(path: str) -> dict:
             out['light'] = rx[0][5:5 + rx[0][4]]
         elif e['label'] == 'lighting 08 01' and rx:
             out['side'] = rx[0][5:5 + rx[0][4]]
+        elif e['label'] == '24 01':
+            pairs = []
+            for rep in rx:
+                if rep[:2] == b'\x24\x01' and len(rep) >= 45:
+                    for slot in range(10):
+                        en, mode, k1, k2 = rep[5 + 4 * slot:9 + 4 * slot]
+                        if en == 1:
+                            pairs.append((mode, k1, k2))
+            out['socd_pairs'] = pairs
+        elif e['label'] == '24 02' and rx and len(rx[0]) > 5:
+            out['socd_on'] = rx[0][5] == 1
         elif e['label'].startswith('keys 21 05 r') and rx and len(rx[0]) > 16:
             lab = e['label'].split()
             out.setdefault('keys', {})[int(lab[3][1:]) * 22 + int(lab[4][1:])] = rx[0][5:17]
@@ -244,6 +290,11 @@ def restore(dev: 'Aula', path: str) -> list[str]:
     if 'side' in areas and dev.read_lighting_raw(True) != areas['side']:
         dev.write_lighting_raw(areas['side'], True)
         done.append(_('boční podsvícení'))
+    if 'socd_pairs' in areas and 'socd_on' in areas:
+        want = (areas['socd_on'], areas['socd_pairs'])
+        if dev.read_socd() != want:
+            dev.write_socd(*want)
+            done.append('SOCD')
     if 'keys' in areas:
         from keyboardlight.devices.aula_layout import KEYS
         groups: dict = {}
