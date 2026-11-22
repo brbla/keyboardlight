@@ -375,6 +375,8 @@ EN = {
     'vlevo pomalu, vpravo rychle': 'left slow, right fast',
     'Tento efekt svítí celou klávesnicí bíle – barvu, duhu, rychlost ani směr nastavit nejde (na psaní viditelně nereaguje).': 'This effect lights the whole keyboard white – colour, rainbow, speed and direction cannot be set (no visible reaction to typing).',
 
+    'Tento efekt je vždy duhový – barvu ani duhu nastavit nejde.': 'This effect is always rainbow – colour and rainbow cannot be set.',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

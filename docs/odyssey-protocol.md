@@ -226,5 +226,6 @@ Windows software: https://data.fast.eu/software/45/45021093/45021093-sw.zip ("OD
 ## 17 "Surmount" (vendor id light_mode_zzcc_text, CZ "Přechodová reakce")
 Whole board white, ignores colour, rainbow, speed and direction; no visible reaction to typing (webcam + user).
 No description found online (also used by Redragon/Glorious-style firmwares, only listed by name).
-18 centre transition is always rainbow: rainbow on = rings from the centre out/in, off = rainbow flowing back
+18 centre transition is always rainbow (the app hides the rainbow toggle and always writes rainbow on = rings
+from the centre out/in by direction; rainbow off = rainbow flowing back
 and forth; direction works in both (user-verified).

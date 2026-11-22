@@ -679,15 +679,12 @@ class MainWindow(QMainWindow):
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION or every)
         first, second = DIRECTION_LABELS.get(eff, (_('Zleva doprava'), _('Zprava doleva')))
-        if eff == 18 and self.light and not self.light.rainbow:     # without "rainbow" it flows back and forth
-            first, second = _('Jedním směrem'), _('Opačným směrem')
         self.dir_lr.setText(first)
         self.dir_rl.setText(second)
         fixed = eff in FIXED_COLORS and not every
-        self.rainbow.setVisible(not custom and not off and (not fixed or eff == 18))
+        self.rainbow.setVisible(not custom and not off and not fixed)
         self.color_panel.setVisible(not off and not fixed)
-        self.fixed_hint.setText(_('Tento efekt je vždy duhový – volba „Duhové barvy“ mění jen druh pohybu '
-                                  '(kruhy ze středu / přelévání).') if eff == 18 else
+        self.fixed_hint.setText(_('Tento efekt je vždy duhový – barvu ani duhu nastavit nejde.') if eff == 18 else
                                 _('Tento efekt svítí celou klávesnicí bíle – barvu, duhu, rychlost ani směr '
                                   'nastavit nejde (na psaní viditelně nereaguje).') if eff == 17 else
                                 _('Tento efekt má vlastní pevné barvy – volba barvy ani duhy na něj nemá vliv.'))
@@ -719,6 +716,8 @@ class MainWindow(QMainWindow):
         self.light.speed = 4 - self.speed.value()
         self.light.direction = 1 if self.dir_rl.isChecked() else 0
         self.light.rainbow = self.rainbow.isChecked()
+        if self.light.effect == 18:          # centre transition: always rainbow, rings out / in by direction
+            self.light.rainbow = True
         self._update_lighting_widgets()
         self._refresh_keyboard()
         self._write_timer.start()
