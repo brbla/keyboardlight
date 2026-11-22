@@ -222,3 +222,9 @@ Windows software: https://data.fast.eu/software/45/45021093/45021093-sw.zip ("OD
   test session it got **stuck dark** (any speed, typing, re-writing the effect did not help); unplugging and
   replugging the keyboard fixed it, and later config writes did not break it again. Full re-test after the replug:
   all other results unchanged. The app shows a "disconnect and reconnect" hint on the lighting page.
+
+## 17 "Surmount" (vendor id light_mode_zzcc_text, CZ "Přechodová reakce")
+Whole board white, ignores colour, rainbow, speed and direction; no visible reaction to typing (webcam + user).
+No description found online (also used by Redragon/Glorious-style firmwares, only listed by name).
+18 centre transition is always rainbow: rainbow on = rings from the centre out/in, off = rainbow flowing back
+and forth; direction works in both (user-verified).

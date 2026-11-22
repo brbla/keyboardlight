@@ -364,6 +364,10 @@ EN = {
     'Zobrazit všechny volby (i ty, které u tohoto efektu podle testu nic nedělají)':
         'Show all options (including those that had no effect on this effect in tests)',
 
+    'Animovaný náhled efektu (přibližná simulace)': 'Animated effect preview (approximate simulation)',
+    'Tento efekt je vždy duhový – volba „Duhové barvy“ mění jen druh pohybu (kruhy ze středu / přelévání).':
+        'This effect is always rainbow – the “Rainbow colours” option only changes the motion (rings from the centre / flowing).',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',

@@ -4,8 +4,10 @@ from __future__ import annotations
 import colorsys
 import json
 import os
+import random
+import time
 
-from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtCore import QEvent, QObject, Qt, QTimer, QUrl
 from PyQt6.QtGui import QColor, QDesktopServices
 from PyQt6.QtWidgets import (QButtonGroup, QCheckBox, QColorDialog, QComboBox, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QMainWindow, QMessageBox, QDialog, QDialogButtonBox, QLineEdit, QPushButton, QRadioButton, QSlider, QSpinBox, QStackedWidget,
@@ -466,9 +468,45 @@ class MainWindow(QMainWindow):
                                    _('Klikni na klávesy (Ctrl = přidat/odebrat, tažením malování)'))
             self._sync_intensity_slider()
 
+    def _animating(self) -> bool:
+        return (hasattr(self, 'animate') and self.animate.isChecked() and self.pages.currentIndex() == 0
+                and bool(self.light) and self.light.effect != EFFECT_CUSTOM and not self._aula_mode())
+
+    def _anim_tick(self):
+        if not self._animating():
+            self._anim_timer.stop()
+            return
+        from keyboardlight.gui.effect_preview import REACTIVE, frame
+        t = time.monotonic() - self._anim_t0
+        if self.light.effect in REACTIVE and time.monotonic() - self._last_real_press > 2.5:
+            if not self._presses or t - self._presses[-1][1] > 0.9:     # demo presses when nobody types
+                self._presses.append((random.choice(KEYS).slot, t))
+        self._presses = [p for p in self._presses if t - p[1] < 6][-20:]
+        self.kbd.colors = frame(self.light, t, self._presses)
+        self.kbd.update()
+
+    def eventFilter(self, obj: QObject, ev: QEvent) -> bool:
+        if obj is getattr(self, 'try_edit', None) and ev.type() == QEvent.Type.KeyPress:
+            text = (ev.text() or '').upper()
+            k = next((k for k in KEYS if k.label.upper() == text and text.strip()), None)
+            if k is None and ev.key() == Qt.Key.Key_Space:
+                k = max(KEYS, key=lambda k: k.w)
+            if k is None:
+                k = random.choice(KEYS)
+            self._last_real_press = time.monotonic()
+            self._presses.append((k.slot, time.monotonic() - self._anim_t0))
+        return super().eventFilter(obj, ev)
+
     def _refresh_keyboard(self):
         page = self.pages.currentIndex()
         self.kbd.colors, self.kbd.labels, self.kbd.marked = {}, {}, set()
+        if self._animating():
+            if not self._anim_timer.isActive():
+                self._anim_timer.start()
+            self._anim_tick()
+            return
+        if hasattr(self, '_anim_timer'):
+            self._anim_timer.stop()
         if page == 0 and self.light:
             if self.light.effect == EFFECT_CUSTOM:
                 self.kbd.colors = {k.slot: QColor(*self.key_colors[k.slot]) for k in KEYS
@@ -579,6 +617,15 @@ class MainWindow(QMainWindow):
         self.show_all.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.show_all.toggled.connect(self._update_lighting_widgets)
         g.addWidget(self.show_all, 7, 0, 1, 3)
+        self.animate = QCheckBox(_('Animovaný náhled efektu (přibližná simulace)'), checked=True)
+        self.animate.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.animate.toggled.connect(self._refresh_keyboard)
+        g.addWidget(self.animate, 8, 0, 1, 3)
+        self._anim_t0 = time.monotonic()
+        self._presses: list[tuple[int, float]] = []
+        self._last_real_press = 0.0
+        self._anim_timer = QTimer(self, interval=50, timeout=self._anim_tick)
+        self.try_edit.installEventFilter(self)
 
         # per-key section
         self.custom_box = QFrame()
@@ -599,7 +646,7 @@ class MainWindow(QMainWindow):
         cb.addWidget(self.save_colors_btn)
         g.addWidget(self.custom_box, 4, 0, 1, 3)
         g.setColumnStretch(1, 1)
-        g.setRowStretch(8, 1)
+        g.setRowStretch(9, 1)
         return w
 
     def _load_lighting_ui(self):
@@ -630,11 +677,16 @@ class MainWindow(QMainWindow):
         for wdg in (self.dir_lr, self.dir_rl):
             wdg.setVisible(eff in WITH_DIRECTION or every)
         first, second = DIRECTION_LABELS.get(eff, (_('Zleva doprava'), _('Zprava doleva')))
+        if eff == 18 and self.light and not self.light.rainbow:     # without "rainbow" it flows back and forth
+            first, second = _('Jedním směrem'), _('Opačným směrem')
         self.dir_lr.setText(first)
         self.dir_rl.setText(second)
         fixed = eff in FIXED_COLORS and not every
-        self.rainbow.setVisible(not custom and not off and not fixed)
+        self.rainbow.setVisible(not custom and not off and (not fixed or eff == 18))
         self.color_panel.setVisible(not off and not fixed)
+        self.fixed_hint.setText(_('Tento efekt je vždy duhový – volba „Duhové barvy“ mění jen druh pohybu '
+                                  '(kruhy ze středu / přelévání).') if eff == 18 else
+                                _('Tento efekt má vlastní pevné barvy – volba barvy ani duhy na něj nemá vliv.'))
         self.fixed_hint.setVisible(fixed)
         self.color_preview.setVisible(not custom)
         # one "Jas" control: hardware brightness for effects, per-key intensity for custom colours
