@@ -82,6 +82,9 @@ class MainWindow(QMainWindow):
         self._loading = False
         self._write_timer = QTimer(self, singleShot=True, interval=400, timeout=self._write_lighting)
         self._colors_timer = QTimer(self, singleShot=True, interval=700, timeout=self._save_colors)
+        # follow changes made on the keyboard itself (Fn+Home, Fn+arrows, Fn+Space) – read-only, ~10 ms
+        self._poll_timer = QTimer(self, interval=2000, timeout=self._poll_lighting)
+        self._poll_timer.start()
 
         root = QWidget()
         self.setCentralWidget(root)
@@ -203,6 +206,26 @@ class MainWindow(QMainWindow):
         self._refresh_keyboard()
         self.statusBar().showMessage(_('Připojeno – nastavení načteno z klávesnice'), 4000)
         self._update_battery()
+
+    def _poll_lighting(self):
+        if (not self.dev or not self.light or self._aula_mode() or self._loading or self._write_timer.isActive()
+                or not self.isVisible()):
+            return
+        try:
+            now = self.dev.read_lighting()
+        except (OdysseyError, OSError):
+            return                                  # unplugged – the hot-plug check handles it
+        if now == self.light or self._write_timer.isActive():
+            return
+        changed_effect = now.effect != self.light.effect
+        self.light = now
+        self._load_lighting_ui()
+        self._refresh_keyboard()
+        if changed_effect:
+            name = dict((e[0], e[1]) for e in EFFECTS).get(now.effect, str(now.effect))
+            self.statusBar().showMessage(_('Na klávesnici přepnuto: {effect}').format(effect=name), 4000)
+        else:
+            self.statusBar().showMessage(_('Nastavení změněno na klávesnici – načteno'), 3000)
 
     def _update_battery(self):
         pct = battery.bluetooth_battery()

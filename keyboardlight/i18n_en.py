@@ -349,6 +349,9 @@ EN = {
     'Shora dolů': 'Top to bottom',
     'Zdola nahoru': 'Bottom to top',
 
+    'Na klávesnici přepnuto: {effect}': 'Switched on the keyboard: {effect}',
+    'Nastavení změněno na klávesnici – načteno': 'Settings changed on the keyboard – reloaded',
+
     # ---- device errors
     'Klávesnice Odyssey nenalezena – připojte ji kabelem (přepínač TYP-C) nebo přes USB přijímač (přepínač 2.4G).':
         'Odyssey keyboard not found – connect it by cable (switch on TYP-C) or through the USB receiver (switch on 2.4G).',
