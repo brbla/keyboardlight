@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "keyboardlight"
-version = "0.1.26"
+version = "0.1.27"
 description = "Linux configurator for the Yenkee YKB 30 Odyssey keyboard (lighting, per-key colours, remapping, macros, profiles)"
 readme = "README.md"
 license = "MIT"

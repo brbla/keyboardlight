@@ -62,6 +62,25 @@ def stepped(slider, labels: list[str]):
             p.drawText(QRectF(0, 7, self.width() / 2, 15), Qt.AlignmentFlag.AlignLeft, labels[0])
             p.drawText(QRectF(self.width() / 2, 7, self.width() / 2, 15), Qt.AlignmentFlag.AlignRight, labels[-1])
 
+    from PyQt6.QtCore import QEvent, QObject
+
+    class _JumpToClick(QObject):
+        """A click anywhere on the slider moves it straight to the nearest step (the handle can be dragged on)."""
+        def eventFilter(self, obj, ev):
+            if ev.type() == QEvent.Type.MouseButtonPress and ev.button() == Qt.MouseButton.LeftButton:
+                opt = QStyleOptionSlider()
+                slider.initStyleOption(opt)
+                handle = slider.style().subControlRect(QStyle.ComplexControl.CC_Slider, opt,
+                                                      QStyle.SubControl.SC_SliderHandle, slider)
+                if not handle.contains(ev.position().toPoint()):
+                    hw = handle.width() or 16
+                    span = max(1, slider.width() - hw)
+                    frac = min(1.0, max(0.0, (ev.position().x() - hw / 2) / span))
+                    slider.setValue(round(slider.minimum() + frac * (slider.maximum() - slider.minimum())))
+            return False
+
+    slider._jump = _JumpToClick(slider)
+    slider.installEventFilter(slider._jump)
     box = QWidget()
     v = QVBoxLayout(box)
     v.setContentsMargins(0, 0, 0, 0)
