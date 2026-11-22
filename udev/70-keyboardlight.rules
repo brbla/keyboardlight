@@ -1,0 +1,6 @@
+# KeyBoardLight: user access to keyboard config interfaces (hidraw) for WebHID / hidapi
+# Yenkee YKB 30 Odyssey (Telink 320f:5055)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="320f", ATTRS{idProduct}=="5055", MODE="0660", TAG+="uaccess"
+# AULA HERO / HE series (WebHID driver hero.aulastar.com)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="372e", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="fb35", MODE="0660", TAG+="uaccess"

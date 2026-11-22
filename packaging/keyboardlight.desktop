@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=KeyBoardLight
+GenericName=Keyboard configurator
+GenericName[cs]=Nastavení klávesnice
+Comment=Lighting, per-key colours, key remapping and macros for Yenkee Odyssey
+Comment[cs]=Podsvícení, barvy kláves, přemapování a makra pro Yenkee Odyssey
+Exec=keyboardlight
+Icon=keyboardlight
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=keyboard;rgb;lighting;macro;yenkee;odyssey;

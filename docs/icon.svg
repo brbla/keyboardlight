@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f4a4f"/>
+      <stop offset="1" stop-color="#0c1d20"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a5559"/>
+      <stop offset="1" stop-color="#26393c"/>
+    </linearGradient>
+    <linearGradient id="lit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ff3f3"/>
+      <stop offset="1" stop-color="#14c4c4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#18d6d6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#18d6d6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- tile -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#bg)"/>
+  <rect x="8.5" y="8.5" width="239" height="239" rx="53.5" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- keyboard body -->
+  <rect x="36" y="70" width="184" height="124" rx="20" fill="#0a1719" stroke="#2f5a5f" stroke-width="2"/>
+
+  <!-- glow behind the lit key -->
+  <circle cx="128" cy="157" r="58" fill="url(#glow)"/>
+
+  <!-- top row -->
+  <rect x="50"  y="84" width="44" height="40" rx="9" fill="url(#cap)"/>
+  <rect x="106" y="84" width="44" height="40" rx="9" fill="url(#cap)"/>
+  <rect x="162" y="84" width="44" height="40" rx="9" fill="url(#cap)"/>
+  <!-- bottom row: middle key lit -->
+  <rect x="50"  y="136" width="44" height="40" rx="9" fill="url(#cap)"/>
+  <rect x="106" y="136" width="44" height="40" rx="9" fill="url(#lit)"/>
+  <rect x="162" y="136" width="44" height="40" rx="9" fill="url(#cap)"/>
+
+  <!-- subtle key highlights -->
+  <g fill="#ffffff" opacity="0.10">
+    <rect x="56" y="88" width="32" height="4" rx="2"/>
+    <rect x="112" y="88" width="32" height="4" rx="2"/>
+    <rect x="168" y="88" width="32" height="4" rx="2"/>
+    <rect x="56" y="140" width="32" height="4" rx="2"/>
+    <rect x="168" y="140" width="32" height="4" rx="2"/>
+  </g>
+  <rect x="112" y="140" width="32" height="4" rx="2" fill="#ffffff" opacity="0.45"/>
+</svg>

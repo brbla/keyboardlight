@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+# private / vendor material – never publish
+captures/
+tools/snapshots/
+docs/vendor/
+# Arch packaging build artefacts
+packaging/arch/src/
+packaging/arch/pkg/
+packaging/arch/keyboardlight/
+packaging/arch/*.pkg.tar.*

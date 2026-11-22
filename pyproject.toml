@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keyboardlight"
+version = "0.1.0"
+description = "Linux configurator for the Yenkee YKB 30 Odyssey keyboard (lighting, per-key colours, remapping, macros, profiles)"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["PyQt6"]
+
+[project.scripts]
+keyboardlight = "keyboardlight.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["keyboardlight*"]
+
+[tool.setuptools.package-data]
+keyboardlight = ["resources/*.svg"]

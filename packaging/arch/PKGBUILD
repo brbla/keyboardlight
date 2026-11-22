@@ -1,0 +1,29 @@
+# Maintainer: brbla
+pkgname=keyboardlight
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Linux configurator for the Yenkee YKB 30 Odyssey keyboard: lighting, per-key colours, key remapping, macros, profiles"
+arch=('any')
+url="https://github.com/brbla/keyboardlight"
+license=('MIT')
+depends=('python' 'python-pyqt6' 'libxkbcommon')
+makedepends=('git')
+install=keyboardlight.install
+source=("git+https://github.com/brbla/keyboardlight.git#tag=v${pkgver}")
+sha256sums=('SKIP')
+
+package() {
+  cd "$srcdir/keyboardlight"
+  install -d "$pkgdir/usr/lib/keyboardlight"
+  cp -r keyboardlight "$pkgdir/usr/lib/keyboardlight/"
+  find "$pkgdir/usr/lib/keyboardlight" -name '__pycache__' -prune -exec rm -rf {} +
+  install -Dm755 /dev/stdin "$pkgdir/usr/bin/keyboardlight" <<'SH'
+#!/bin/sh
+PYTHONPATH=/usr/lib/keyboardlight${PYTHONPATH:+:$PYTHONPATH} exec python3 -m keyboardlight "$@"
+SH
+  install -Dm644 udev/70-keyboardlight.rules "$pkgdir/usr/lib/udev/rules.d/70-keyboardlight.rules"
+  install -Dm644 packaging/keyboardlight.desktop "$pkgdir/usr/share/applications/keyboardlight.desktop"
+  install -Dm644 keyboardlight/resources/keyboardlight.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/keyboardlight.svg"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 docs/odyssey-protocol.md "$pkgdir/usr/share/doc/$pkgname/odyssey-protocol.md"
+}
